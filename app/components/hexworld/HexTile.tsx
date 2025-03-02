@@ -47,10 +47,9 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
   const x = hexSize * (3 / 2 * tile.coord.q);
   const z = hexSize * (Math.sqrt(3) / 2 * tile.coord.q + Math.sqrt(3) * tile.coord.r);
 
-  // Calculate the height of the hex tile
-  // Minimum base height (even for water) plus elevation
-  const baseHeight = 0.2; // Minimum base height for all tiles
-  const tileHeight = Math.max(baseHeight, tile.elevation);
+  // Use the elevation directly from the tile data
+  // The terrain generator now ensures a minimum height
+  const tileHeight = tile.elevation;
 
   // Position y is half the height (since cylinder is centered vertically)
   const y = tileHeight / 2;
@@ -73,7 +72,7 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
         args={[
           hexSize, // top radius
           hexSize, // bottom radius
-          tileHeight, // Use the calculated height
+          tileHeight, // Use the elevation directly
           6, // radial segments (6 for hexagon)
           1, // height segments
           false // open ended

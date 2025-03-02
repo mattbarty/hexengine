@@ -10,8 +10,8 @@ const defaultWorldConfig: WorldConfig = {
   grid: {
     radius: 10,
     hexSize: 1,
-    gridHeight: 8,
-    noiseScale: 0.4,
+    gridHeight: 6,
+    noiseScale: 1.2,
     waterThreshold: 0.35,
     forestThreshold: 0.6,
     mountainThreshold: 0.75,

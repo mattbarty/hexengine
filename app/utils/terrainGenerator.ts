@@ -1,4 +1,4 @@
-import { createNoise2D } from 'simplex-noise';
+import { createNoise2D, createNoise3D } from 'simplex-noise';
 import { HexCoord, HexTile, TerrainType, HexGridConfig } from '../types';
 import { getHexId, hexToPixel } from './hexUtils';
 
@@ -10,76 +10,90 @@ export function generateTerrain(
 ): HexTile[] {
 	// Initialize noise functions with optional seed
 	const elevationNoise = createNoise2D(() => seed || Math.random());
+	const elevationNoise2 = createNoise2D(() =>
+		seed ? seed + 0.5 : Math.random() + 0.5
+	);
 	const humidityNoise = createNoise2D(() => (seed ? seed + 1 : Math.random()));
 	const temperatureNoise = createNoise2D(() =>
 		seed ? seed + 2 : Math.random()
 	);
 
+	// Define minimum elevation value (as a fraction of gridHeight)
+	const MIN_ELEVATION = 0.5;
+
 	return hexes.map((hex) => {
 		const [x, y] = hexToPixel(hex, config.hexSize);
 
-		// Generate elevation using Perlin noise
-		const nx = x / (config.radius * config.hexSize * config.noiseScale);
-		const ny = y / (config.radius * config.hexSize * config.noiseScale);
+		// Generate elevation using multiple octaves of Perlin noise for more natural terrain
+		// First octave - large features
+		const nx1 = x / (config.radius * config.hexSize * config.noiseScale * 2);
+		const ny1 = y / (config.radius * config.hexSize * config.noiseScale * 2);
+		const largeFeatures = (elevationNoise(nx1, ny1) + 1) / 2;
 
-		// Create main elevation with Perlin noise (range -1 to 1)
-		const baseElevation = elevationNoise(nx, ny);
+		// Second octave - medium features
+		const nx2 = x / (config.radius * config.hexSize * config.noiseScale);
+		const ny2 = y / (config.radius * config.hexSize * config.noiseScale);
+		const mediumFeatures = (elevationNoise2(nx2, ny2) + 1) / 2;
 
-		// Scale to 0-1 range
-		const normalizedElevation = (baseElevation + 1) / 2;
+		// Combine octaves with different weights for smoother terrain
+		let normalizedElevation = largeFeatures * 0.7 + mediumFeatures * 0.3;
 
 		// Apply some adjustments to create more interesting terrain
-		// Distance from center creates a bowl shape
+		// Distance from center creates a bowl shape for island-like terrain
 		const centerDistanceFactor =
 			1 -
 			Math.sqrt(hex.q * hex.q + hex.r * hex.r + hex.s * hex.s) /
 				(config.radius + 1);
 
 		// Combine with distance factor to create island-like terrain
-		// Enhance the elevation contrast by applying a power function
-		let elevation = Math.pow(
-			normalizedElevation * 0.8 + centerDistanceFactor * 0.2,
-			1.2
-		);
+		// Use a gentler curve for smoother transitions
+		let elevation = normalizedElevation * 0.7 + centerDistanceFactor * 0.3;
 
-		// Add humidity and temperature variations
-		const humidity = (humidityNoise(nx * 2, ny * 2) + 1) / 2;
-		const temperature = (temperatureNoise(nx * 1.5, ny * 1.5) + 1) / 2;
+		// Add humidity and temperature variations with larger scale for smoother transitions
+		const humidity = (humidityNoise(nx1, ny1) + 1) / 2;
+		const temperature = (temperatureNoise(nx1, ny1) + 1) / 2;
 
 		// Determine terrain type based on thresholds
 		let terrainType: TerrainType;
 
 		if (elevation < config.waterThreshold) {
 			terrainType = TerrainType.WATER;
-			// Flatten water level but keep a small amount of variation for waves
-			elevation = config.waterThreshold * 0.2;
+			// Set water to a consistent minimum level
+			elevation = MIN_ELEVATION;
 		} else if (elevation > config.mountainThreshold) {
 			terrainType = TerrainType.MOUNTAIN;
-			// Enhance mountain height
-			elevation =
-				config.mountainThreshold + (elevation - config.mountainThreshold) * 1.5;
+			// Enhance mountain height but with a smoother curve
+			elevation = Math.max(
+				MIN_ELEVATION + 0.5,
+				config.mountainThreshold + (elevation - config.mountainThreshold) * 1.2
+			);
 		} else if (
 			elevation > config.waterThreshold + 0.1 &&
 			humidity > config.forestThreshold
 		) {
 			terrainType = TerrainType.FOREST;
-			// Slightly enhance forest elevation
-			elevation = elevation * 1.1;
+			// Keep forest elevation close to base terrain but ensure minimum
+			elevation = Math.max(MIN_ELEVATION + 0.3, elevation * 1.05);
 		} else if (
 			elevation < config.waterThreshold + 0.15 &&
 			humidity < config.sandThreshold
 		) {
 			terrainType = TerrainType.SAND;
-			// Keep sand relatively flat
-			elevation = config.waterThreshold + 0.1;
+			// Keep sand relatively flat but ensure minimum
+			elevation = Math.max(MIN_ELEVATION + 0.1, config.waterThreshold + 0.1);
 		} else {
 			terrainType = TerrainType.LAND;
+			// Ensure land has minimum elevation
+			elevation = Math.max(MIN_ELEVATION + 0.2, elevation);
 		}
+
+		// Scale elevation by grid height
+		const scaledElevation = elevation * config.gridHeight;
 
 		return {
 			id: getHexId(hex),
 			coord: hex,
-			elevation: elevation * config.gridHeight,
+			elevation: scaledElevation,
 			terrainType,
 			humidity,
 			temperature,

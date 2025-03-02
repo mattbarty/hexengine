@@ -8,11 +8,35 @@ export interface HexCoord {
 // Terrain types
 export enum TerrainType {
 	WATER = 'water',
-	LAND = 'land',
+	SHORE = 'shore',
+	BEACH = 'beach',
+	SHRUB = 'shrub',
 	FOREST = 'forest',
-	MOUNTAIN = 'mountain',
-	SAND = 'sand',
+	STONE = 'stone',
+	SNOW = 'snow',
 }
+
+// Terrain colors
+export const TerrainColors: Record<TerrainType, string> = {
+	[TerrainType.WATER]: '#00a9ff',
+	[TerrainType.SHORE]: '#ffd68f',
+	[TerrainType.BEACH]: '#efb28f',
+	[TerrainType.SHRUB]: '#9ea667',
+	[TerrainType.FOREST]: '#586647',
+	[TerrainType.STONE]: '#656565',
+	[TerrainType.SNOW]: '#9aa7ad',
+};
+
+// Terrain thresholds
+export const TerrainThresholds: Record<TerrainType, number> = {
+	[TerrainType.WATER]: 0.21,
+	[TerrainType.SHORE]: 0.22, // WATER + 0.01
+	[TerrainType.BEACH]: 0.26, // SHORE + 0.04
+	[TerrainType.SHRUB]: 0.36, // BEACH + 0.1
+	[TerrainType.FOREST]: 0.65, // SHRUB + 0.29
+	[TerrainType.STONE]: 0.71, // FOREST + 0.06
+	[TerrainType.SNOW]: 1.0, // Maximum
+};
 
 // Hex tile data structure
 export interface HexTile {
@@ -31,10 +55,8 @@ export interface HexGridConfig {
 	hexSize: number; // Size of each hexagon
 	gridHeight: number; // Height scale for elevation
 	noiseScale: number; // Scale for Perlin noise
-	waterThreshold: number; // Elevation threshold for water
-	forestThreshold: number; // Combined elevation/humidity threshold for forests
-	mountainThreshold: number; // Elevation threshold for mountains
-	sandThreshold: number; // Combined elevation/humidity threshold for sand
+	noiseDetail: number; // Detail level for noise (0-1)
+	noiseFuzziness: number; // Fuzziness of the noise (0-1)
 }
 
 // Camera settings
@@ -48,5 +70,5 @@ export interface CameraConfig {
 export interface WorldConfig {
 	grid: HexGridConfig;
 	camera: CameraConfig;
-	seed?: number; // Optional seed for reproducible noise
+	seed: number; // Seed for reproducible noise
 }

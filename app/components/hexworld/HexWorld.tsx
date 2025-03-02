@@ -87,7 +87,9 @@ export default function HexWorld({ config, onTileSelect }: HexWorldProps) {
         {/* Hex Grid */}
         <HexGrid
           config={config.grid}
+          seed={config.seed}
           onTileSelect={handleTileSelect}
+          onGridCreated={handleGridCreated}
         />
       </Canvas>
     </div>

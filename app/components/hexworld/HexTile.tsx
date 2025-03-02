@@ -1,45 +1,55 @@
-import { useRef, useMemo } from 'react';
-import { Mesh } from 'three';
+import { useRef } from 'react';
+import { HexTile as HexTileType, TerrainType, TerrainColors } from '../../types';
 import { useFrame } from '@react-three/fiber';
-import { HexTile as HexTileType, TerrainType } from '../../types';
-import { getTerrainColor } from '../../utils/terrainGenerator';
+import { Mesh } from 'three';
 
 interface HexTileProps {
   tile: HexTileType;
   hexSize: number;
-  onClick?: (tileId: string) => void;
+  onClick: (tileId: string) => void;
 }
 
 export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
   const meshRef = useRef<Mesh>(null);
 
-  // Normalized elevation for color calculation (0-1 range)
-  const normalizedElevation = tile.elevation / 10; // Assuming max height is 10
-
-  // Calculate color based on terrain type and elevation
-  const color = useMemo(() => {
-    return getTerrainColor(tile.terrainType, tile.elevation, normalizedElevation);
-  }, [tile.terrainType, tile.elevation, normalizedElevation]);
-
-  // Optional animation for selected state
+  // Animate selection
   useFrame(() => {
     if (!meshRef.current) return;
 
     if (tile.isSelected) {
-      // Animate selected tile (e.g., slight hover effect)
-      const targetY = tile.elevation / 2 + 0.2;
-      meshRef.current.position.y += (targetY - meshRef.current.position.y) * 0.1;
+      // Pulse effect for selected tile
+      const time = Date.now() * 0.001;
+      meshRef.current.position.y = tile.elevation + Math.sin(time * 2) * 0.05;
     } else {
-      // Return to normal position
-      const targetY = tile.elevation / 2;
-      meshRef.current.position.y += (targetY - meshRef.current.position.y) * 0.1;
+      // Reset position if not selected
+      meshRef.current.position.y = tile.elevation;
     }
   });
 
-  // Handle click events
-  const handleClick = () => {
-    if (onClick) {
-      onClick(tile.id);
+  // Get color based on terrain type
+  const getColor = () => {
+    return TerrainColors[tile.terrainType];
+  };
+
+  // Get height based on terrain type
+  const getHeight = () => {
+    switch (tile.terrainType) {
+      case TerrainType.WATER:
+        return 0.05;
+      case TerrainType.SHORE:
+        return 0.1;
+      case TerrainType.BEACH:
+        return 0.15;
+      case TerrainType.SHRUB:
+        return 0.2;
+      case TerrainType.FOREST:
+        return 0.3;
+      case TerrainType.STONE:
+        return 0.4;
+      case TerrainType.SNOW:
+        return 0.5;
+      default:
+        return 0.2;
     }
   };
 
@@ -47,40 +57,21 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
   const x = hexSize * (3 / 2 * tile.coord.q);
   const z = hexSize * (Math.sqrt(3) / 2 * tile.coord.q + Math.sqrt(3) * tile.coord.r);
 
-  // Use the elevation directly from the tile data
-  // The terrain generator now ensures a minimum height
-  const tileHeight = tile.elevation;
-
-  // Position y is half the height (since cylinder is centered vertically)
-  const y = tileHeight / 2;
-
-  // Material properties based on terrain type
-  const materialProps = tile.terrainType === TerrainType.WATER
-    ? { roughness: 0.1, envMapIntensity: 0.5, metalness: 0.2 }
-    : { roughness: 0.8, metalness: 0.1 };
-
   return (
     <mesh
       ref={meshRef}
-      position={[x, y, z]}
-      rotation={[0, Math.PI / 6, 0]}
-      onClick={handleClick}
-      receiveShadow
-      castShadow
+      position={[x, tile.elevation, z]}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(tile.id);
+      }}
     >
-      <cylinderGeometry
-        args={[
-          hexSize, // top radius
-          hexSize, // bottom radius
-          tileHeight, // Use the elevation directly
-          6, // radial segments (6 for hexagon)
-          1, // height segments
-          false // open ended
-        ]}
-      />
+      <cylinderGeometry args={[hexSize, hexSize, getHeight(), 6, 1, false]} />
       <meshStandardMaterial
-        color={color}
-        {...materialProps}
+        color={getColor()}
+        wireframe={false}
+        emissive={tile.isSelected ? "#ffffff" : "#000000"}
+        emissiveIntensity={tile.isSelected ? 0.2 : 0}
       />
     </mesh>
   );

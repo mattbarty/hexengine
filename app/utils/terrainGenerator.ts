@@ -20,6 +20,7 @@ export function generateTerrain(
 	const elevationNoise2 = createNoise2D(() => seed + 0.5);
 	const humidityNoise = createNoise2D(() => seed + 1);
 	const temperatureNoise = createNoise2D(() => seed + 2);
+	const peakNoise = createNoise2D(() => seed + 1); // Additional noise for mountain peaks
 
 	// Define minimum elevation value (as a fraction of gridHeight)
 	const MIN_ELEVATION = 0.3;
@@ -71,6 +72,7 @@ export function generateTerrain(
 		let prevThreshold: number = 0;
 		let nextThreshold: number = 0;
 		let waterDepth: number = 0;
+		let peakFactor: number = 0;
 
 		// Use the terrain thresholds to determine the terrain type
 		if (elevation < TerrainThresholds[TerrainType.WATER]) {
@@ -108,16 +110,24 @@ export function generateTerrain(
 			nextThreshold = TerrainThresholds[TerrainType.FOREST];
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
-			baseHeight = 0.4;
+			baseHeight = 0.5;
 			heightRange = 0.2;
 			prevThreshold = TerrainThresholds[TerrainType.FOREST];
 			nextThreshold = TerrainThresholds[TerrainType.STONE];
 		} else {
 			terrainType = TerrainType.SNOW;
-			baseHeight = 0.5;
-			heightRange = 0.3;
+			baseHeight = 0.7; // Much higher base height for snow
+			heightRange = 0.5; // Larger height range for more dramatic peaks
 			prevThreshold = TerrainThresholds[TerrainType.STONE];
 			nextThreshold = TerrainThresholds[TerrainType.SNOW];
+
+			// Add additional peak noise for snow terrain
+			// This creates more dramatic mountain peaks
+			const nxp =
+				x / (config.radius * config.hexSize * config.noiseScale * 0.5);
+			const nyp =
+				y / (config.radius * config.hexSize * config.noiseScale * 0.5);
+			peakFactor = (peakNoise(nxp, nyp) + 1) / 2;
 		}
 
 		// Calculate normalized position within the current terrain range
@@ -130,7 +140,12 @@ export function generateTerrain(
 
 		// Calculate the final height by adding a portion of the height range based on the normalized position
 		// This creates natural variation within each terrain type
-		const terrainHeight = baseHeight + normalizedPosition * heightRange;
+		let terrainHeight = baseHeight + normalizedPosition * heightRange;
+
+		// For snow terrain, add the peak factor to create more dramatic mountain peaks
+		if (terrainType === TerrainType.SNOW) {
+			terrainHeight += peakFactor * 0.3; // Add up to 0.3 additional height based on peak noise
+		}
 
 		// Scale elevation by grid height
 		let scaledElevation = terrainHeight * config.gridHeight;

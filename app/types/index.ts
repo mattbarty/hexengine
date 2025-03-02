@@ -30,11 +30,11 @@ export const TerrainColors: Record<TerrainType, string> = {
 // Terrain thresholds
 export const TerrainThresholds: Record<TerrainType, number> = {
 	[TerrainType.WATER]: 0.21,
-	[TerrainType.SHORE]: 0.22, // WATER + 0.01
-	[TerrainType.BEACH]: 0.26, // SHORE + 0.04
-	[TerrainType.SHRUB]: 0.36, // BEACH + 0.1
+	[TerrainType.SHORE]: 0.25, // WATER + 0.01
+	[TerrainType.BEACH]: 0.35, // SHORE + 0.04
+	[TerrainType.SHRUB]: 0.46, // BEACH + 0.1
 	[TerrainType.FOREST]: 0.65, // SHRUB + 0.29
-	[TerrainType.STONE]: 0.71, // FOREST + 0.06
+	[TerrainType.STONE]: 0.83, // FOREST + 0.06
 	[TerrainType.SNOW]: 1.0, // Maximum
 };
 

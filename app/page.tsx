@@ -8,15 +8,15 @@ import { HexTile, WorldConfig } from './types';
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
-    radius: 10,
+    radius: 20,
     hexSize: 1,
-    gridHeight: 3,
-    noiseScale: 1.2,
-    noiseDetail: 0.5,
-    noiseFuzziness: 0.3
+    gridHeight: 10,
+    noiseScale: 1,
+    noiseDetail: 0.45,
+    noiseFuzziness: 1
   },
   camera: {
-    position: [0, 20, 25],
+    position: [0, 40, 50],
     rotation: [-Math.PI / 3, 0, 0],
     fov: 45
   }

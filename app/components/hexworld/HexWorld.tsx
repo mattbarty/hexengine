@@ -61,9 +61,10 @@ export default function HexWorld({ config, onTileSelect }: HexWorldProps) {
           enableDamping
           dampingFactor={0.1}
           rotateSpeed={0.5}
-          minDistance={5}
-          maxDistance={50}
+          minDistance={10}
+          maxDistance={100}
           maxPolarAngle={Math.PI / 2.1} // Prevent going below the horizon
+          target={[0, 0, 0]} // Center of the grid
         />
 
         {/* Lighting */}

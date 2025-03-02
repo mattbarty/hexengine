@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HexEngine
+
+A procedurally generated hexagonal world engine built with Next.js and Three.js. This project creates a 3D hexagonal grid with terrain generated using Perlin noise, similar to strategy games like Civilization.
+
+![HexEngine Preview](./public/hexengine-preview.png)
+
+## Features
+
+- **Procedural Terrain Generation**: Using Perlin noise to create realistic, varied terrain
+- **Hexagonal Grid System**: Efficient cube coordinate system for hex grid operations
+- **Terrain Types**: Water, land, forest, mountain, and sand biomes
+- **Interactive UI**: Click tiles to view detailed information
+- **3D Environment**: Beautiful rendering with Three.js, including lighting, shadows, and sky
+- **Modular Architecture**: Designed for easy extension with game mechanics
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+ and npm
+
+### Installation
+
+1. Clone the repository
+
+   ```
+   git clone https://github.com/yourusername/hexengine.git
+   cd hexengine
+   ```
+
+2. Install dependencies
+
+   ```
+   npm install
+   ```
+
+3. Run the development server
+
+   ```
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Configuration
+
+You can modify the world configuration in `app/page.tsx`:
+
+```typescript
+const defaultWorldConfig: WorldConfig = {
+	grid: {
+		radius: 10, // Number of hex rings from center
+		hexSize: 1, // Size of each hex
+		gridHeight: 5, // Maximum elevation
+		noiseScale: 0.5, // Scale for Perlin noise
+		waterThreshold: 0.4, // Elevation threshold for water
+		forestThreshold: 0.6, // Humidity threshold for forests
+		mountainThreshold: 0.7, // Elevation threshold for mountains
+		sandThreshold: 0.3, // Humidity threshold for sand
+	},
+	camera: {
+		position: [0, 15, 20],
+		rotation: [-Math.PI / 4, 0, 0],
+		fov: 50,
+	},
+	seed: 12345, // Optional seed for reproducible terrain
+};
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `/app/components/hexworld/`: React components for the hex grid and world
+- `/app/utils/`: Utility functions for hex grid operations and terrain generation
+- `/app/types/`: TypeScript type definitions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Future Enhancements
 
-## Learn More
+- Path finding and movement
+- Resources and resource gathering
+- Units and buildings
+- Turn-based gameplay
+- Combat system
+- Multiplayer support
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Acknowledgments
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Red Blob Games](https://www.redblobgames.com/grids/hexagons/) for hexagonal grid algorithms
+- [three.js](https://threejs.org/) for 3D rendering
+- [simplex-noise](https://www.npmjs.com/package/simplex-noise) for Perlin noise generation

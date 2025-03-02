@@ -54,8 +54,6 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
         wireframe={false}
         emissive={tile.isSelected ? "#ffffff" : "#000000"}
         emissiveIntensity={tile.isSelected ? 0.2 : 0}
-        transparent={tile.terrainType === TerrainType.WATER}
-        opacity={tile.terrainType === TerrainType.WATER ? 0.8 : 1}
       />
     </mesh>
   );

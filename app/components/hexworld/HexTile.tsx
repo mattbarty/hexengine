@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { HexTile as HexTileType, TerrainType, TerrainColors } from '../../types';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
+import { getTerrainColor } from '../../utils/terrainGenerator';
 
 interface HexTileProps {
   tile: HexTileType;
@@ -26,9 +27,9 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
     }
   });
 
-  // Get color based on terrain type
+  // Get color based on terrain type and water depth
   const getColor = () => {
-    return TerrainColors[tile.terrainType];
+    return getTerrainColor(tile.terrainType, tile.waterDepth);
   };
 
   // Calculate hex position from cube coordinates
@@ -53,6 +54,8 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
         wireframe={false}
         emissive={tile.isSelected ? "#ffffff" : "#000000"}
         emissiveIntensity={tile.isSelected ? 0.2 : 0}
+        transparent={tile.terrainType === TerrainType.WATER}
+        opacity={tile.terrainType === TerrainType.WATER ? 0.8 : 1}
       />
     </mesh>
   );

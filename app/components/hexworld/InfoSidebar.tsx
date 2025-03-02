@@ -136,6 +136,13 @@ export default function InfoSidebar({
 
             <div className="text-gray-300">Temperature:</div>
             <div>{temperature}</div>
+
+            {selectedTile.terrainType === TerrainType.WATER && selectedTile.waterDepth !== undefined && (
+              <>
+                <div className="text-gray-300">Water Depth:</div>
+                <div>{((1 - selectedTile.waterDepth) * 100).toFixed(0)}%</div>
+              </>
+            )}
           </div>
         </div>
 

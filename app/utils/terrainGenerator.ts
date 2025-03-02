@@ -24,6 +24,9 @@ export function generateTerrain(
 	// Define minimum elevation value (as a fraction of gridHeight)
 	const MIN_ELEVATION = 0.3;
 
+	// Define water level - all water tiles will be at this height
+	const WATER_LEVEL = 0.05 * config.gridHeight;
+
 	return hexes.map((hex) => {
 		const [x, y] = hexToPixel(hex, config.hexSize);
 
@@ -63,37 +66,79 @@ export function generateTerrain(
 
 		// Determine terrain type based on thresholds
 		let terrainType: TerrainType;
-		let terrainHeight: number;
+		let baseHeight: number;
+		let heightRange: number;
+		let prevThreshold: number = 0;
+		let nextThreshold: number = 0;
+		let waterDepth: number = 0;
 
 		// Use the terrain thresholds to determine the terrain type
 		if (elevation < TerrainThresholds[TerrainType.WATER]) {
 			terrainType = TerrainType.WATER;
-			// Set water to a consistent minimum level
-			terrainHeight = 0.05;
+			// Calculate water depth as a normalized value (0-1)
+			// The deeper the water, the closer to 0 this value will be
+			waterDepth = elevation / TerrainThresholds[TerrainType.WATER];
+			// All water tiles have the same height
+			baseHeight = 0.05;
+			heightRange = 0;
+			nextThreshold = TerrainThresholds[TerrainType.WATER];
 		} else if (elevation < TerrainThresholds[TerrainType.SHORE]) {
 			terrainType = TerrainType.SHORE;
-			terrainHeight = 0.1;
+			baseHeight = 0.1;
+			heightRange = 0.05;
+			prevThreshold = TerrainThresholds[TerrainType.WATER];
+			nextThreshold = TerrainThresholds[TerrainType.SHORE];
 		} else if (elevation < TerrainThresholds[TerrainType.BEACH]) {
 			terrainType = TerrainType.BEACH;
-			terrainHeight = 0.15;
+			baseHeight = 0.15;
+			heightRange = 0.05;
+			prevThreshold = TerrainThresholds[TerrainType.SHORE];
+			nextThreshold = TerrainThresholds[TerrainType.BEACH];
 		} else if (elevation < TerrainThresholds[TerrainType.SHRUB]) {
 			terrainType = TerrainType.SHRUB;
-			terrainHeight = 0.2;
+			baseHeight = 0.2;
+			heightRange = 0.1;
+			prevThreshold = TerrainThresholds[TerrainType.BEACH];
+			nextThreshold = TerrainThresholds[TerrainType.SHRUB];
 		} else if (elevation < TerrainThresholds[TerrainType.FOREST]) {
 			terrainType = TerrainType.FOREST;
-			terrainHeight = 0.3;
+			baseHeight = 0.3;
+			heightRange = 0.15;
+			prevThreshold = TerrainThresholds[TerrainType.SHRUB];
+			nextThreshold = TerrainThresholds[TerrainType.FOREST];
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
-			terrainHeight = 0.4;
+			baseHeight = 0.4;
+			heightRange = 0.2;
+			prevThreshold = TerrainThresholds[TerrainType.FOREST];
+			nextThreshold = TerrainThresholds[TerrainType.STONE];
 		} else {
 			terrainType = TerrainType.SNOW;
-			terrainHeight = 0.5;
+			baseHeight = 0.5;
+			heightRange = 0.3;
+			prevThreshold = TerrainThresholds[TerrainType.STONE];
+			nextThreshold = TerrainThresholds[TerrainType.SNOW];
 		}
 
+		// Calculate normalized position within the current terrain range
+		// This gives us a value from 0 to 1 representing where in the range this tile falls
+		let normalizedPosition = 0;
+		if (nextThreshold > prevThreshold) {
+			normalizedPosition =
+				(elevation - prevThreshold) / (nextThreshold - prevThreshold);
+		}
+
+		// Calculate the final height by adding a portion of the height range based on the normalized position
+		// This creates natural variation within each terrain type
+		const terrainHeight = baseHeight + normalizedPosition * heightRange;
+
 		// Scale elevation by grid height
-		// We want to ensure that all tiles start from the same base level (0)
-		// and extend upward based on their terrain type
-		const scaledElevation = terrainHeight * config.gridHeight;
+		let scaledElevation = terrainHeight * config.gridHeight;
+
+		// For water tiles, use the fixed water level
+		if (terrainType === TerrainType.WATER) {
+			scaledElevation = WATER_LEVEL;
+		}
 
 		return {
 			id: getHexId(hex),
@@ -102,6 +147,7 @@ export function generateTerrain(
 			terrainType,
 			humidity,
 			temperature,
+			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
 			isSelected: false,
 		};
 	});
@@ -110,9 +156,33 @@ export function generateTerrain(
 // Get the color for a terrain type
 export function getTerrainColor(
 	terrainType: TerrainType,
-	elevation: number,
-	normalizedElevation: number
+	waterDepth: number = 0
 ): string {
-	// Use the predefined colors from TerrainColors
+	// For water, adjust the color based on depth
+	if (terrainType === TerrainType.WATER) {
+		// Get the base water color
+		const baseColor = TerrainColors[TerrainType.WATER];
+
+		// Convert hex to RGB
+		const r = parseInt(baseColor.slice(1, 3), 16);
+		const g = parseInt(baseColor.slice(3, 5), 16);
+		const b = parseInt(baseColor.slice(5, 7), 16);
+
+		// Adjust the color based on depth (waterDepth is 0-1, where 0 is deepest)
+		// Deeper water is darker and more saturated
+		const depthFactor = 0.5 + waterDepth * 0.5; // 0.5 to 1.0
+
+		// Darken the color for deeper water
+		const adjustedR = Math.floor(r * depthFactor);
+		const adjustedG = Math.floor(g * depthFactor);
+		const adjustedB = Math.floor(b); // Keep blue relatively constant
+
+		// Convert back to hex
+		return `#${adjustedR.toString(16).padStart(2, '0')}${adjustedG
+			.toString(16)
+			.padStart(2, '0')}${adjustedB.toString(16).padStart(2, '0')}`;
+	}
+
+	// For other terrain types, use the predefined colors
 	return TerrainColors[terrainType];
 }

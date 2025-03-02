@@ -46,6 +46,7 @@ export interface HexTile {
 	terrainType: TerrainType;
 	humidity: number;
 	temperature: number;
+	waterDepth?: number;
 	isSelected?: boolean;
 }
 

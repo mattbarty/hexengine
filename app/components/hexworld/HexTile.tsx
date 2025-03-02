@@ -19,38 +19,16 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
     if (tile.isSelected) {
       // Pulse effect for selected tile
       const time = Date.now() * 0.001;
-      meshRef.current.position.y = tile.elevation + Math.sin(time * 2) * 0.05;
+      meshRef.current.position.y = tile.elevation / 2 + Math.sin(time * 2) * 0.05;
     } else {
       // Reset position if not selected
-      meshRef.current.position.y = tile.elevation;
+      meshRef.current.position.y = tile.elevation / 2;
     }
   });
 
   // Get color based on terrain type
   const getColor = () => {
     return TerrainColors[tile.terrainType];
-  };
-
-  // Get height based on terrain type
-  const getHeight = () => {
-    switch (tile.terrainType) {
-      case TerrainType.WATER:
-        return 0.05;
-      case TerrainType.SHORE:
-        return 0.1;
-      case TerrainType.BEACH:
-        return 0.15;
-      case TerrainType.SHRUB:
-        return 0.2;
-      case TerrainType.FOREST:
-        return 0.3;
-      case TerrainType.STONE:
-        return 0.4;
-      case TerrainType.SNOW:
-        return 0.5;
-      default:
-        return 0.2;
-    }
   };
 
   // Calculate hex position from cube coordinates
@@ -60,13 +38,16 @@ export default function HexTile({ tile, hexSize, onClick }: HexTileProps) {
   return (
     <mesh
       ref={meshRef}
-      position={[x, tile.elevation, z]}
+      position={[x, tile.elevation / 2, z]}
+      rotation={[0, Math.PI / 6, 0]} // Rotate to align with hex grid
       onClick={(e) => {
         e.stopPropagation();
         onClick(tile.id);
       }}
+      receiveShadow
+      castShadow
     >
-      <cylinderGeometry args={[hexSize, hexSize, getHeight(), 6, 1, false]} />
+      <cylinderGeometry args={[hexSize, hexSize, tile.elevation, 6, 1, false]} />
       <meshStandardMaterial
         color={getColor()}
         wireframe={false}

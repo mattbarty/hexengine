@@ -63,34 +63,37 @@ export function generateTerrain(
 
 		// Determine terrain type based on thresholds
 		let terrainType: TerrainType;
+		let terrainHeight: number;
 
 		// Use the terrain thresholds to determine the terrain type
 		if (elevation < TerrainThresholds[TerrainType.WATER]) {
 			terrainType = TerrainType.WATER;
 			// Set water to a consistent minimum level
-			elevation = MIN_ELEVATION;
+			terrainHeight = 0.05;
 		} else if (elevation < TerrainThresholds[TerrainType.SHORE]) {
 			terrainType = TerrainType.SHORE;
-			elevation = MIN_ELEVATION + 0.05;
+			terrainHeight = 0.1;
 		} else if (elevation < TerrainThresholds[TerrainType.BEACH]) {
 			terrainType = TerrainType.BEACH;
-			elevation = MIN_ELEVATION + 0.1;
+			terrainHeight = 0.15;
 		} else if (elevation < TerrainThresholds[TerrainType.SHRUB]) {
 			terrainType = TerrainType.SHRUB;
-			elevation = MIN_ELEVATION + 0.2;
+			terrainHeight = 0.2;
 		} else if (elevation < TerrainThresholds[TerrainType.FOREST]) {
 			terrainType = TerrainType.FOREST;
-			elevation = MIN_ELEVATION + 0.3;
+			terrainHeight = 0.3;
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
-			elevation = MIN_ELEVATION + 0.5;
+			terrainHeight = 0.4;
 		} else {
 			terrainType = TerrainType.SNOW;
-			elevation = MIN_ELEVATION + 0.7;
+			terrainHeight = 0.5;
 		}
 
 		// Scale elevation by grid height
-		const scaledElevation = elevation * config.gridHeight;
+		// We want to ensure that all tiles start from the same base level (0)
+		// and extend upward based on their terrain type
+		const scaledElevation = terrainHeight * config.gridHeight;
 
 		return {
 			id: getHexId(hex),

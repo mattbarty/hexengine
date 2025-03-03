@@ -96,11 +96,12 @@ export function generateTerrain(
 	const waterLevelFactor = Math.max(0.2, Math.min(0.8, config.waterLevel));
 
 	// Define bands once
-	const SHORE_BAND = 0.08;
-	const BEACH_BAND = 0.15 + 0.2 * (1 - waterLevelFactor);
-	const SHRUB_BAND = 0.15 + 0.1 * (1 - waterLevelFactor);
-	const FOREST_BAND = 0.5 + 0.25 * (1 - waterLevelFactor);
-	const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor);
+	const SHORE_BAND = 0.1;
+	const BEACH_BAND = 0.1 + 0.5 * (1 - waterLevelFactor);
+	const SHRUB_BAND = 0.12 + 0.1 * (1 - waterLevelFactor);
+	const FOREST_BAND = 0.5 + 0.1 * (1 - waterLevelFactor);
+	const STONE_BAND = 0.6 + 0.1 * (1 - waterLevelFactor);
+	const SNOW_BAND = 0.75;
 
 	return hexes.map((hex) => {
 		// Get or calculate height for current hex
@@ -158,10 +159,9 @@ export function generateTerrain(
 			terrainType = TerrainType.SHRUB;
 		} else if (normalizedHeightAboveWater < FOREST_BAND) {
 			terrainType = TerrainType.FOREST;
-		} else if (
-			normalizedHeightAboveWater < STONE_BAND ||
-			waterLevelFactor < 0.4
-		) {
+		} else if (normalizedHeightAboveWater < STONE_BAND) {
+			terrainType = TerrainType.STONE;
+		} else if (normalizedHeightAboveWater < SNOW_BAND) {
 			terrainType = TerrainType.STONE;
 		} else {
 			terrainType = TerrainType.SNOW;

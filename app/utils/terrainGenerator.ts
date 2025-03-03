@@ -93,31 +93,31 @@ export function generateTerrain(
 		} else if (elevation < TerrainThresholds[TerrainType.BEACH]) {
 			terrainType = TerrainType.BEACH;
 			terrainHeight = 0.15;
-			heightRange = 0.05;
+			heightRange = 0.1;
 			prevThreshold = TerrainThresholds[TerrainType.SHORE];
 			nextThreshold = TerrainThresholds[TerrainType.BEACH];
 		} else if (elevation < TerrainThresholds[TerrainType.SHRUB]) {
 			terrainType = TerrainType.SHRUB;
-			terrainHeight = 0.2;
-			heightRange = 0.1;
+			terrainHeight = 0.25;
+			heightRange = 0.05;
 			prevThreshold = TerrainThresholds[TerrainType.BEACH];
 			nextThreshold = TerrainThresholds[TerrainType.SHRUB];
 		} else if (elevation < TerrainThresholds[TerrainType.FOREST]) {
 			terrainType = TerrainType.FOREST;
 			terrainHeight = 0.3;
-			heightRange = 0.15;
+			heightRange = 0.2;
 			prevThreshold = TerrainThresholds[TerrainType.SHRUB];
 			nextThreshold = TerrainThresholds[TerrainType.FOREST];
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
 			terrainHeight = 0.5;
-			heightRange = 0.2;
+			heightRange = 0.3;
 			prevThreshold = TerrainThresholds[TerrainType.FOREST];
 			nextThreshold = TerrainThresholds[TerrainType.STONE];
 		} else {
 			terrainType = TerrainType.SNOW;
-			terrainHeight = 0.7; // Much higher base height for snow
-			heightRange = 0.5; // Larger height range for more dramatic peaks
+			terrainHeight = 0.8; // Much higher base height for snow
+			heightRange = 0.3; // Larger height range for more dramatic peaks
 			prevThreshold = TerrainThresholds[TerrainType.STONE];
 			nextThreshold = TerrainThresholds[TerrainType.SNOW];
 
@@ -141,11 +141,6 @@ export function generateTerrain(
 		// Calculate the final height by adding a portion of the height range based on the normalized position
 		// This creates natural variation within each terrain type
 		let finalTerrainHeight = terrainHeight + normalizedPosition * heightRange;
-
-		// For snow terrain, add the peak factor to create more dramatic mountain peaks
-		if (terrainType === TerrainType.SNOW) {
-			finalTerrainHeight += peakFactor * 0.3; // Add up to 0.3 additional height based on peak noise
-		}
 
 		// Scale elevation by grid height and add the base height
 		let scaledElevation = BASE_HEIGHT + finalTerrainHeight * config.gridHeight;

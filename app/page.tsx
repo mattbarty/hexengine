@@ -8,13 +8,13 @@ import { HexTile, WorldConfig } from './types';
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
-    radius: 20,
+    radius: 25,
     hexSize: 1,
-    gridHeight: 15,
-    noiseScale: 1,
-    noiseDetail: 0.45,
+    gridHeight: 12,
+    noiseScale: 1.45,
+    noiseDetail: 0.75,
     noiseFuzziness: 1,
-    waterLevel: 0.3
+    waterLevel: 0.2
   },
   camera: {
     position: [0, 40, 50],
@@ -71,7 +71,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-gray-900">
       <div className="flex-grow relative">
         <div className="absolute inset-0">
           <HexWorld

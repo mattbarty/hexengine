@@ -10,7 +10,7 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
     radius: 20,
     hexSize: 1,
-    gridHeight: 10,
+    gridHeight: 50,
     noiseScale: 1,
     noiseDetail: 0.45,
     noiseFuzziness: 1
@@ -76,12 +76,10 @@ export default function Home() {
           <HexWorld
             key={worldKey}
             config={worldConfig}
-            onTileSelect={handleTileSelect}
           />
         </div>
       </div>
       <InfoSidebar
-        selectedTile={selectedTile}
         worldConfig={worldConfig}
         onConfigChange={handleConfigChange}
         onRefresh={handleRefresh}

@@ -23,10 +23,10 @@ export function generateTerrain(
 	const peakNoise = createNoise2D(() => seed + 3); // Additional noise for mountain peaks
 
 	// Define minimum base height that all terrain will extrude from
-	const BASE_HEIGHT = 2.5;
+	const BASE_HEIGHT = 1;
 
 	// Define water level - all water tiles will be at this height
-	const WATER_LEVEL = BASE_HEIGHT + 0.05 * config.gridHeight;
+	const WATER_LEVEL = BASE_HEIGHT + 0.1 * config.gridHeight;
 
 	return hexes.map((hex) => {
 		const [x, y] = hexToPixel(hex, config.hexSize);
@@ -81,43 +81,43 @@ export function generateTerrain(
 			// The deeper the water, the closer to 0 this value will be
 			waterDepth = elevation / TerrainThresholds[TerrainType.WATER];
 			// All water tiles have the same height
-			terrainHeight = 0.05;
+			terrainHeight = 0; // Water level is the base reference
 			heightRange = 0;
 			nextThreshold = TerrainThresholds[TerrainType.WATER];
 		} else if (elevation < TerrainThresholds[TerrainType.SHORE]) {
 			terrainType = TerrainType.SHORE;
-			terrainHeight = 0.1;
-			heightRange = 0.05;
+			terrainHeight = 0.02; // Just slightly above water
+			heightRange = 0.01;
 			prevThreshold = TerrainThresholds[TerrainType.WATER];
 			nextThreshold = TerrainThresholds[TerrainType.SHORE];
 		} else if (elevation < TerrainThresholds[TerrainType.BEACH]) {
 			terrainType = TerrainType.BEACH;
-			terrainHeight = 0.15;
-			heightRange = 0.1;
+			terrainHeight = 0.03; // A bit higher than shore
+			heightRange = 0.02;
 			prevThreshold = TerrainThresholds[TerrainType.SHORE];
 			nextThreshold = TerrainThresholds[TerrainType.BEACH];
 		} else if (elevation < TerrainThresholds[TerrainType.SHRUB]) {
 			terrainType = TerrainType.SHRUB;
-			terrainHeight = 0.25;
-			heightRange = 0.05;
+			terrainHeight = 0.05; // Gradually increasing
+			heightRange = 0.03;
 			prevThreshold = TerrainThresholds[TerrainType.BEACH];
 			nextThreshold = TerrainThresholds[TerrainType.SHRUB];
 		} else if (elevation < TerrainThresholds[TerrainType.FOREST]) {
 			terrainType = TerrainType.FOREST;
-			terrainHeight = 0.3;
-			heightRange = 0.2;
+			terrainHeight = 0.08; // Forests on higher ground
+			heightRange = 0.04;
 			prevThreshold = TerrainThresholds[TerrainType.SHRUB];
 			nextThreshold = TerrainThresholds[TerrainType.FOREST];
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
-			terrainHeight = 0.5;
-			heightRange = 0.3;
+			terrainHeight = 0.12; // Stone terrain significantly higher
+			heightRange = 0.08;
 			prevThreshold = TerrainThresholds[TerrainType.FOREST];
 			nextThreshold = TerrainThresholds[TerrainType.STONE];
 		} else {
 			terrainType = TerrainType.SNOW;
-			terrainHeight = 0.8; // Much higher base height for snow
-			heightRange = 0.3; // Larger height range for more dramatic peaks
+			terrainHeight = 0.2; // Snow caps at highest elevation
+			heightRange = 0.1; // Large range for dramatic peaks
 			prevThreshold = TerrainThresholds[TerrainType.STONE];
 			nextThreshold = TerrainThresholds[TerrainType.SNOW];
 
@@ -142,8 +142,8 @@ export function generateTerrain(
 		// This creates natural variation within each terrain type
 		let finalTerrainHeight = terrainHeight + normalizedPosition * heightRange;
 
-		// Scale elevation by grid height and add the base height
-		let scaledElevation = BASE_HEIGHT + finalTerrainHeight * config.gridHeight;
+		// Scale elevation by grid height and add the water level as base
+		let scaledElevation = WATER_LEVEL + finalTerrainHeight * config.gridHeight;
 
 		// For water tiles, use the fixed water level
 		if (terrainType === TerrainType.WATER) {

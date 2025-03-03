@@ -14,7 +14,15 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
     noiseScale: 1.45,
     noiseDetail: 0.75,
     noiseFuzziness: 1,
-    waterLevel: 0.2
+    waterLevel: 0.2,
+    terrainBands: {
+      shore: 0.1,
+      beach: 0.2,
+      shrub: 0.3,
+      forest: 0.55,
+      stone: 0.8,
+      snow: 0.85
+    }
   },
   camera: {
     position: [0, 40, 50],

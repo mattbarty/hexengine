@@ -56,6 +56,15 @@ export interface HexGridConfig {
 	noiseDetail: number; // Detail level for noise (0-1)
 	noiseFuzziness: number; // Fuzziness of the noise (0-1)
 	waterLevel: number; // Height threshold for water (0-1)
+	// Terrain band thresholds
+	terrainBands: {
+		shore: number; // Shore band threshold
+		beach: number; // Beach band threshold
+		shrub: number; // Shrub band threshold
+		forest: number; // Forest band threshold
+		stone: number; // Stone band threshold
+		snow: number; // Snow band threshold
+	};
 }
 
 // Camera settings

@@ -49,169 +49,244 @@ export default function InfoSidebar({
     onRefresh();
   };
 
+  const handleGridChange = (key: string, value: number) => {
+    onConfigChange({
+      ...worldConfig,
+      grid: {
+        ...worldConfig.grid,
+        [key]: value,
+      },
+    });
+  };
+
+  const handleTerrainBandChange = (key: keyof typeof worldConfig.grid.terrainBands, value: number) => {
+    onConfigChange({
+      ...worldConfig,
+      grid: {
+        ...worldConfig.grid,
+        terrainBands: {
+          ...worldConfig.grid.terrainBands,
+          [key]: value,
+        },
+      },
+    });
+  };
+
   // If no tile is selected, show the configuration panel
   return (
     <div className="w-80 p-4 bg-gray-800 text-white h-full overflow-auto">
       <h2 className="text-xl font-bold mb-4">World Settings</h2>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Terrain Generation</h3>
+        <h3 className="text-lg font-semibold mb-2">Grid Settings</h3>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Grid Radius: {localConfig.grid.radius}
+          <label className="block mb-1">
+            Grid Radius: {worldConfig.grid.radius}
+          </label>
+          <input
+            type="range"
+            min="10"
+            max="50"
+            value={worldConfig.grid.radius}
+            onChange={(e) => handleGridChange('radius', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Grid Height: {worldConfig.grid.gridHeight}
           </label>
           <input
             type="range"
             min="5"
             max="20"
-            step="1"
-            value={localConfig.grid.radius}
-            onChange={(e) => handleConfigChange('grid', 'radius', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            step="0.5"
+            value={worldConfig.grid.gridHeight}
+            onChange={(e) => handleGridChange('gridHeight', parseFloat(e.target.value))}
+            className="w-full"
           />
-          <div className="flex justify-between text-xs mt-1">
-            <span>5</span>
-            <span>20</span>
-          </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Height: {localConfig.grid.gridHeight.toFixed(1)}
-          </label>
-          <input
-            type="range"
-            min="0.5"
-            max="5"
-            step="0.1"
-            value={localConfig.grid.gridHeight}
-            onChange={(e) => handleConfigChange('grid', 'gridHeight', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between text-xs mt-1">
-            <span>Flat</span>
-            <span>Tall</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Water Level: {(localConfig.grid.waterLevel * 100).toFixed(0)}%
+          <label className="block mb-1">
+            Water Level: {(worldConfig.grid.waterLevel * 100).toFixed(0)}%
           </label>
           <input
             type="range"
             min="0"
             max="1"
             step="0.01"
-            value={localConfig.grid.waterLevel}
-            onChange={(e) => handleConfigChange('grid', 'waterLevel', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            value={worldConfig.grid.waterLevel}
+            onChange={(e) => handleGridChange('waterLevel', parseFloat(e.target.value))}
+            className="w-full"
           />
-          <div className="flex justify-between text-xs mt-1">
-            <span>Low</span>
-            <span>High</span>
-          </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Noise Settings</h3>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Scale: {localConfig.grid.noiseScale.toFixed(2)}
+          <label className="block mb-1">
+            Noise Scale: {worldConfig.grid.noiseScale.toFixed(2)}
           </label>
           <input
             type="range"
-            min="0.1"
-            max="2"
+            min="0.5"
+            max="3"
             step="0.05"
-            value={localConfig.grid.noiseScale}
-            onChange={(e) => handleConfigChange('grid', 'noiseScale', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            value={worldConfig.grid.noiseScale}
+            onChange={(e) => handleGridChange('noiseScale', parseFloat(e.target.value))}
+            className="w-full"
           />
-          <div className="flex justify-between text-xs mt-1">
-            <span>Small</span>
-            <span>Large</span>
-          </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Detail: {localConfig.grid.noiseDetail.toFixed(2)}
-          </label>
-          <input
-            type="range"
-            min="0.1"
-            max="1"
-            step="0.05"
-            value={localConfig.grid.noiseDetail}
-            onChange={(e) => handleConfigChange('grid', 'noiseDetail', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between text-xs mt-1">
-            <span>Smooth</span>
-            <span>Detailed</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Fuzziness: {localConfig.grid.noiseFuzziness.toFixed(2)}
+          <label className="block mb-1">
+            Detail: {(worldConfig.grid.noiseDetail * 100).toFixed(0)}%
           </label>
           <input
             type="range"
             min="0"
             max="1"
-            step="0.05"
-            value={localConfig.grid.noiseFuzziness}
-            onChange={(e) => handleConfigChange('grid', 'noiseFuzziness', e.target.value)}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            step="0.01"
+            value={worldConfig.grid.noiseDetail}
+            onChange={(e) => handleGridChange('noiseDetail', parseFloat(e.target.value))}
+            className="w-full"
           />
-          <div className="flex justify-between text-xs mt-1">
-            <span>Clean</span>
-            <span>Fuzzy</span>
-          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Fuzziness: {(worldConfig.grid.noiseFuzziness * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={worldConfig.grid.noiseFuzziness}
+            onChange={(e) => handleGridChange('noiseFuzziness', parseFloat(e.target.value))}
+            className="w-full"
+          />
         </div>
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Terrain Colors</h3>
+        <h3 className="text-lg font-semibold mb-2">Terrain Bands</h3>
 
-        {Object.entries(TerrainThresholds).map(([terrain, threshold], index) => {
-          // Skip the last one (SNOW) as it's always 1.0
-          if (terrain === TerrainType.SNOW) return null;
+        <div className="mb-4">
+          <label className="block mb-1">
+            Shore: {(worldConfig.grid.terrainBands.shore * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="0.2"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.shore}
+            onChange={(e) => handleTerrainBandChange('shore', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
 
-          return (
-            <div key={terrain} className="mb-2">
-              <div className="flex items-center mb-1">
-                <div
-                  className="w-4 h-4 mr-2 rounded-sm"
-                  style={{ backgroundColor: TerrainColors[terrain as TerrainType] }}
-                ></div>
-                <label className="block text-sm font-medium flex-grow capitalize">
-                  {terrain.toLowerCase()}: {threshold.toFixed(2)}
-                </label>
-              </div>
-            </div>
-          );
-        })}
+        <div className="mb-4">
+          <label className="block mb-1">
+            Beach: {(worldConfig.grid.terrainBands.beach * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="0.3"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.beach}
+            onChange={(e) => handleTerrainBandChange('beach', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Shrub: {(worldConfig.grid.terrainBands.shrub * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0.2"
+            max="0.4"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.shrub}
+            onChange={(e) => handleTerrainBandChange('shrub', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Forest: {(worldConfig.grid.terrainBands.forest * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0.3"
+            max="0.7"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.forest}
+            onChange={(e) => handleTerrainBandChange('forest', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Stone: {(worldConfig.grid.terrainBands.stone * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0.6"
+            max="0.9"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.stone}
+            onChange={(e) => handleTerrainBandChange('stone', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">
+            Snow: {(worldConfig.grid.terrainBands.snow * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0.8"
+            max="1"
+            step="0.01"
+            value={worldConfig.grid.terrainBands.snow}
+            onChange={(e) => handleTerrainBandChange('snow', parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Seed</h3>
-        <div className="flex items-center">
-          <span className="mr-2">Current: {localConfig.seed.toFixed(4)}</span>
-          <button
-            onClick={handleNewSeed}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
-          >
-            New Seed
-          </button>
+        <h3 className="text-lg font-semibold mb-2">Stone Distribution</h3>
+        <div className="text-sm opacity-80">
+          <p className="mb-2">Spawn Rates:</p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Shore: 5%</li>
+            <li>Beach: 8%</li>
+            <li>Shrub: 12%</li>
+            <li>Forest: 15%</li>
+            <li>Stone: 40%</li>
+            <li>Snow: 20%</li>
+          </ul>
         </div>
       </div>
 
       <div className="mb-6">
         <button
           onClick={onRefresh}
-          className="w-full py-2 bg-green-600 hover:bg-green-700 rounded font-medium"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
         >
           Regenerate World
         </button>

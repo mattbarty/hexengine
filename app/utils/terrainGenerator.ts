@@ -7,7 +7,7 @@ import {
 	TerrainColors,
 	TerrainThresholds,
 } from '../types';
-import { getHexId, hexToPixel } from './hexUtils';
+import { getHexId, hexToPixel, getHexesInRadius } from './hexUtils';
 
 // Generate terrain for a hex grid
 export function generateTerrain(
@@ -209,4 +209,106 @@ export function getTerrainColor(
 
 	// For other terrain types, use the predefined colors
 	return TerrainColors[terrainType];
+}
+
+export function getTerrainType(
+	height: number,
+	config: HexGridConfig
+): TerrainType {
+	const { terrainBands, waterLevel } = config;
+
+	// Water is special - it's anything below water level
+	if (height <= waterLevel) {
+		return TerrainType.WATER;
+	}
+
+	// Calculate height relative to water level (0-1 scale)
+	const relativeHeight = (height - waterLevel) / (1 - waterLevel);
+
+	// Determine terrain type based on relative height
+	if (relativeHeight <= terrainBands.shore) return TerrainType.SHORE;
+	if (relativeHeight <= terrainBands.beach) return TerrainType.BEACH;
+	if (relativeHeight <= terrainBands.shrub) return TerrainType.SHRUB;
+	if (relativeHeight <= terrainBands.forest) return TerrainType.FOREST;
+	if (relativeHeight <= terrainBands.stone) return TerrainType.STONE;
+	if (relativeHeight <= terrainBands.snow) return TerrainType.SNOW;
+	return TerrainType.SNOW;
+}
+
+export function generateHexGrid(config: HexGridConfig): HexTile[] {
+	const hexes = getHexesInRadius(config.radius);
+	const { waterLevel } = config;
+
+	// Calculate actual water level based on grid height
+	const BASE_HEIGHT = 0;
+	const actualWaterLevel = BASE_HEIGHT + waterLevel * config.gridHeight;
+
+	// Setup noise
+	const noise2D = createNoise2D();
+	const noise2D2 = createNoise2D();
+	const noise2D3 = createNoise2D();
+
+	// Cache for height calculations
+	const heightCache = new Map<string, number>();
+
+	// Calculate height for a given coordinate
+	const calculateHeight = (q: number, r: number, s: number): number => {
+		const key = `${q},${r},${s}`;
+		if (heightCache.has(key)) {
+			return heightCache.get(key)!;
+		}
+
+		const x = q * 1.5;
+		const z = (r * 2 + q) * 0.866;
+
+		// Base height from primary noise
+		let height =
+			(noise2D(x * config.noiseScale, z * config.noiseScale) + 1) * 0.5;
+
+		// Add detail with secondary noise
+		height +=
+			((noise2D2(x * config.noiseScale * 2, z * config.noiseScale * 2) + 1) *
+				0.5 *
+				config.noiseDetail) /
+			2;
+
+		// Add fuzziness with tertiary noise
+		height +=
+			((noise2D3(x * config.noiseScale * 4, z * config.noiseScale * 4) + 1) *
+				0.5 *
+				config.noiseFuzziness) /
+			4;
+
+		// Normalize to 0-1
+		height = Math.max(0, Math.min(1, height));
+
+		// Scale to grid height
+		height = BASE_HEIGHT + height * config.gridHeight;
+
+		heightCache.set(key, height);
+		return height;
+	};
+
+	return hexes.map((hex: HexCoord) => {
+		// Get or calculate height for current hex
+		const height = calculateHeight(hex.q, hex.r, hex.s);
+		const finalHeight = height < actualWaterLevel ? actualWaterLevel : height;
+
+		// Determine terrain type using the new function
+		const terrainType = getTerrainType(height / config.gridHeight, config);
+
+		// Calculate water depth for water tiles
+		const waterDepth =
+			terrainType === TerrainType.WATER
+				? Math.max(0, (height - BASE_HEIGHT) / (actualWaterLevel - BASE_HEIGHT))
+				: 0;
+
+		return {
+			id: getHexId(hex),
+			coord: hex,
+			elevation: finalHeight,
+			terrainType,
+			waterDepth,
+		};
+	});
 }

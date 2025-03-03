@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { HexGridConfig, HexTile as HexTileType } from '../../types';
 import { getHexesInRadius } from '../../utils/hexUtils';
 import { generateTerrain } from '../../utils/terrainGenerator';
@@ -7,14 +7,10 @@ import HexTile from './HexTile';
 interface HexGridProps {
   config: HexGridConfig;
   seed: number;
-  onTileSelect?: (tileId: string) => void;
   onGridCreated?: (tiles: HexTileType[]) => void;
 }
 
-export default function HexGrid({ config, seed, onTileSelect, onGridCreated }: HexGridProps) {
-  // State to track the selected tile
-  const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
-
+export default function HexGrid({ config, seed, onGridCreated }: HexGridProps) {
   // Generate hex grid and terrain
   const tiles = useMemo(() => {
     const hexes = getHexesInRadius(config.radius);
@@ -28,25 +24,13 @@ export default function HexGrid({ config, seed, onTileSelect, onGridCreated }: H
     }
   }, [tiles, onGridCreated]);
 
-  // Handle tile click
-  const handleTileClick = (tileId: string) => {
-    setSelectedTileId(tileId);
-    if (onTileSelect) {
-      onTileSelect(tileId);
-    }
-  };
-
   return (
     <group>
       {tiles.map((tile) => (
         <HexTile
           key={tile.id}
-          tile={{
-            ...tile,
-            isSelected: tile.id === selectedTileId
-          }}
+          tile={tile}
           hexSize={config.hexSize}
-          onClick={handleTileClick}
         />
       ))}
     </group>

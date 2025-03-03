@@ -158,7 +158,6 @@ export function generateTerrain(
 			humidity,
 			temperature,
 			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
-			isSelected: false,
 		};
 	});
 }

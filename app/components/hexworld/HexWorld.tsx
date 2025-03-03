@@ -12,13 +12,9 @@ import { useState, useCallback } from 'react';
 
 interface HexWorldProps {
   config: WorldConfig;
-  onTileSelect?: (tile: HexTile | null) => void;
 }
 
-export default function HexWorld({ config, onTileSelect }: HexWorldProps) {
-  // State to track the selected tile
-  const [selectedTile, setSelectedTile] = useState<HexTile | null>(null);
-
+export default function HexWorld({ config }: HexWorldProps) {
   // Map of tile ids to tile data for quick lookup
   const [tileMap, setTileMap] = useState<Record<string, HexTile>>({});
 
@@ -30,15 +26,6 @@ export default function HexWorld({ config, onTileSelect }: HexWorldProps) {
     });
     setTileMap(map);
   }, []);
-
-  // Handle tile selection
-  const handleTileSelect = useCallback((tileId: string) => {
-    const tile = tileMap[tileId];
-    setSelectedTile(tile);
-    if (onTileSelect) {
-      onTileSelect(tile);
-    }
-  }, [tileMap, onTileSelect]);
 
   const { camera } = config;
 
@@ -89,7 +76,6 @@ export default function HexWorld({ config, onTileSelect }: HexWorldProps) {
         <HexGrid
           config={config.grid}
           seed={config.seed}
-          onTileSelect={handleTileSelect}
           onGridCreated={handleGridCreated}
         />
       </Canvas>

@@ -47,7 +47,6 @@ export interface HexTile {
 	humidity: number;
 	temperature: number;
 	waterDepth?: number;
-	isSelected?: boolean;
 }
 
 // Hex grid configuration

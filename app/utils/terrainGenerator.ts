@@ -69,22 +69,27 @@ export function generateTerrain(
 		const actualWaterLevel =
 			BASE_HEIGHT + config.waterLevel * config.gridHeight;
 
-		// Determine terrain type based on height relative to water level
-		let terrainType: TerrainType;
-		let waterDepth: number = 0;
-
 		// Calculate height relative to water level
 		const heightAboveWater = height - actualWaterLevel;
 		const normalizedHeightAboveWater = heightAboveWater / config.gridHeight;
 
-		// Define relative height bands for each terrain type
-		const SHORE_BAND = 0.05; // How far above water for shore
-		const BEACH_BAND = 0.1; // How far above water for beach
-		const SHRUB_BAND = 0.2; // etc.
-		const FOREST_BAND = 0.3;
-		const STONE_BAND = 0.4;
+		// Define dynamic terrain bands based on water level
+		// When water level is low, expand middle terrain types
+		// When water level is high, compress middle terrain types
+		const waterLevelFactor = Math.max(0.2, Math.min(0.8, config.waterLevel));
+
+		// Adjust band sizes based on water level
+		const SHORE_BAND = 0.05; // Shore always stays small for realism
+		const BEACH_BAND = 0.1 + 0.15 * (1 - waterLevelFactor); // Beaches expand when water is low
+		const SHRUB_BAND = 0.25 + 0.2 * (1 - waterLevelFactor); // Shrubland expands when water is low
+		const FOREST_BAND = 0.45 + 0.25 * (1 - waterLevelFactor); // Forest expands when water is low
+		const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor); // Stone becomes more prevalent with low water
+		// Snow only appears when water level is higher (more mountainous terrain)
 
 		// Determine terrain type based on height relative to water
+		let terrainType: TerrainType;
+		let waterDepth: number = 0;
+
 		if (heightAboveWater < 0) {
 			terrainType = TerrainType.WATER;
 			// Water depth is normalized based on how far below water level we are
@@ -100,7 +105,10 @@ export function generateTerrain(
 			terrainType = TerrainType.SHRUB;
 		} else if (normalizedHeightAboveWater < FOREST_BAND) {
 			terrainType = TerrainType.FOREST;
-		} else if (normalizedHeightAboveWater < STONE_BAND) {
+		} else if (
+			normalizedHeightAboveWater < STONE_BAND ||
+			waterLevelFactor < 0.4
+		) {
 			terrainType = TerrainType.STONE;
 		} else {
 			terrainType = TerrainType.SNOW;

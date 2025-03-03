@@ -22,19 +22,29 @@ export function generateTerrain(
 	// Define minimum base height that all terrain will extrude from
 	const BASE_HEIGHT = 1.5;
 
-	// Define water level for terrain type determination
-	const WATER_LEVEL = BASE_HEIGHT + 0.1 * config.gridHeight;
+	// Pre-calculate heights for all hexes in a map to avoid recalculation
+	const heightMap = new Map<string, number>();
 
-	return hexes.map((hex) => {
-		const [x, y] = hexToPixel(hex, config.hexSize);
+	// Helper to calculate height for a hex
+	const calculateHeight = (q: number, r: number, s: number): number => {
+		const key = `${q},${r},${s}`;
+		if (heightMap.has(key)) {
+			return heightMap.get(key)!;
+		}
 
-		// Generate elevation using multiple octaves of Perlin noise for more natural terrain
+		// Skip if outside grid
+		if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) > config.radius) {
+			return Infinity;
+		}
+
+		const [x, y] = hexToPixel({ q, r, s }, config.hexSize);
+
 		// First octave - large features
 		const nx1 = x / (config.radius * config.hexSize * config.noiseScale * 2);
 		const ny1 = y / (config.radius * config.hexSize * config.noiseScale * 2);
 		const largeFeatures = (elevationNoise(nx1, ny1) + 1) / 2;
 
-		// Second octave - medium features with detail parameter
+		// Second octave - medium features
 		const nx2 = x / (config.radius * config.hexSize * config.noiseScale);
 		const ny2 = y / (config.radius * config.hexSize * config.noiseScale);
 		const mediumFeatures =
@@ -42,203 +52,127 @@ export function generateTerrain(
 				1) /
 			2;
 
-		// Combine octaves with different weights for smoother terrain
-		// Use fuzziness parameter to control the blend
-		let normalizedElevation =
+		// Calculate elevation
+		const normalizedElevation =
 			largeFeatures * (1 - config.noiseFuzziness) +
 			mediumFeatures * config.noiseFuzziness;
 
-		// Apply some adjustments to create more interesting terrain
-		// Distance from center creates a bowl shape for island-like terrain
 		const centerDistanceFactor =
-			1 -
-			Math.sqrt(hex.q * hex.q + hex.r * hex.r + hex.s * hex.s) /
-				(config.radius + 1);
-
-		// Combine with distance factor to create island-like terrain
-		let elevation = normalizedElevation * 0.8 + centerDistanceFactor * 0.3;
-
-		// Calculate the actual height from the noise
+			1 - Math.sqrt(q * q + r * r + s * s) / (config.radius + 1);
+		const elevation = normalizedElevation * 0.8 + centerDistanceFactor * 0.3;
 		const height = BASE_HEIGHT + elevation * config.gridHeight;
 
-		// Calculate the actual water level height
-		const actualWaterLevel =
-			BASE_HEIGHT + config.waterLevel * config.gridHeight;
+		heightMap.set(key, height);
+		return height;
+	};
 
-		// For points below water, set their visual height to exactly the water level
+	// Pre-calculate neighbor offsets for rings
+	const ring1Offsets = [
+		[1, -1, 0],
+		[1, 0, -1],
+		[0, 1, -1],
+		[-1, 1, 0],
+		[-1, 0, 1],
+		[0, -1, 1],
+	];
+
+	const ring2Offsets = [
+		[2, -2, 0],
+		[2, -1, -1],
+		[2, 0, -2],
+		[1, 1, -2],
+		[0, 2, -2],
+		[-1, 2, -1],
+		[-2, 2, 0],
+		[-2, 1, 1],
+		[-2, 0, 2],
+		[-1, -1, 2],
+		[0, -2, 2],
+		[1, -2, 1],
+	];
+
+	// Calculate water level once
+	const actualWaterLevel = BASE_HEIGHT + config.waterLevel * config.gridHeight;
+	const waterLevelFactor = Math.max(0.2, Math.min(0.8, config.waterLevel));
+
+	// Define bands once
+	const SHORE_BAND = 0.08;
+	const BEACH_BAND = 0.15 + 0.2 * (1 - waterLevelFactor);
+	const SHRUB_BAND = 0.15 + 0.1 * (1 - waterLevelFactor);
+	const FOREST_BAND = 0.5 + 0.25 * (1 - waterLevelFactor);
+	const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor);
+
+	return hexes.map((hex) => {
+		// Get or calculate height for current hex
+		const height = calculateHeight(hex.q, hex.r, hex.s);
 		const finalHeight = height < actualWaterLevel ? actualWaterLevel : height;
 
-		// Calculate height relative to water level using ORIGINAL height for water detection
+		// Early return for water tiles
+		if (height < actualWaterLevel) {
+			return {
+				id: getHexId(hex),
+				coord: hex,
+				elevation: finalHeight,
+				terrainType: TerrainType.WATER,
+				waterDepth: Math.max(
+					0,
+					(height - BASE_HEIGHT) / (actualWaterLevel - BASE_HEIGHT)
+				),
+			};
+		}
+
+		// Calculate normalized height
 		const heightAboveWater = height - actualWaterLevel;
 		const normalizedHeightAboveWater = heightAboveWater / config.gridHeight;
 
-		// Calculate relative height (0-1 scale) using the final height for terrain bands
-		const heightAboveBase = finalHeight - BASE_HEIGHT;
-		const relativeHeight = heightAboveBase / config.gridHeight;
+		// Optimized water proximity check
+		let waterProximity = 0;
 
-		// Define dynamic terrain bands based on water level
-		// When water level is low, expand middle terrain types
-		// When water level is high, compress middle terrain types
-		const waterLevelFactor = Math.max(0.2, Math.min(0.8, config.waterLevel));
-
-		// Helper function to check if a hex is within range of water
-		const getWaterProximity = () => {
-			// Check two rings of hexes
-			const ring1 = [
-				{ q: hex.q + 1, r: hex.r - 1, s: hex.s },
-				{ q: hex.q + 1, r: hex.r, s: hex.s - 1 },
-				{ q: hex.q, r: hex.r + 1, s: hex.s - 1 },
-				{ q: hex.q - 1, r: hex.r + 1, s: hex.s },
-				{ q: hex.q - 1, r: hex.r, s: hex.s + 1 },
-				{ q: hex.q, r: hex.r - 1, s: hex.s + 1 },
-			];
-
-			const ring2 = [
-				{ q: hex.q + 2, r: hex.r - 2, s: hex.s },
-				{ q: hex.q + 2, r: hex.r - 1, s: hex.s - 1 },
-				{ q: hex.q + 2, r: hex.r, s: hex.s - 2 },
-				{ q: hex.q + 1, r: hex.r + 1, s: hex.s - 2 },
-				{ q: hex.q, r: hex.r + 2, s: hex.s - 2 },
-				{ q: hex.q - 1, r: hex.r + 2, s: hex.s - 1 },
-				{ q: hex.q - 2, r: hex.r + 2, s: hex.s },
-				{ q: hex.q - 2, r: hex.r + 1, s: hex.s + 1 },
-				{ q: hex.q - 2, r: hex.r, s: hex.s + 2 },
-				{ q: hex.q - 1, r: hex.r - 1, s: hex.s + 2 },
-				{ q: hex.q, r: hex.r - 2, s: hex.s + 2 },
-				{ q: hex.q + 1, r: hex.r - 2, s: hex.s + 1 },
-			];
-
-			let proximity = 0;
-
-			// Check first ring (immediate neighbors)
-			const hasAdjacentWater = ring1.some((n) => {
-				if (
-					Math.max(Math.abs(n.q), Math.abs(n.r), Math.abs(n.s)) > config.radius
-				) {
-					return false;
-				}
-				const [nx, ny] = hexToPixel(n, config.hexSize);
-				const nNoise1 =
-					(elevationNoise(
-						nx / (config.radius * config.hexSize * config.noiseScale * 2),
-						ny / (config.radius * config.hexSize * config.noiseScale * 2)
-					) +
-						1) /
-					2;
-				const nNoise2 =
-					(elevationNoise2(
-						(nx / (config.radius * config.hexSize * config.noiseScale)) *
-							config.noiseDetail,
-						(ny / (config.radius * config.hexSize * config.noiseScale)) *
-							config.noiseDetail
-					) +
-						1) /
-					2;
-
-				const nElevation =
-					(nNoise1 * (1 - config.noiseFuzziness) +
-						nNoise2 * config.noiseFuzziness) *
-						0.8 +
-					(1 -
-						Math.sqrt(n.q * n.q + n.r * n.r + n.s * n.s) /
-							(config.radius + 1)) *
-						0.3;
-
-				const nHeight = BASE_HEIGHT + nElevation * config.gridHeight;
-				return nHeight < actualWaterLevel;
-			});
-
-			if (hasAdjacentWater) return 1;
-
-			// Check second ring if no adjacent water
-			const hasNearbyWater = ring2.some((n) => {
-				if (
-					Math.max(Math.abs(n.q), Math.abs(n.r), Math.abs(n.s)) > config.radius
-				) {
-					return false;
-				}
-				const [nx, ny] = hexToPixel(n, config.hexSize);
-				const nNoise1 =
-					(elevationNoise(
-						nx / (config.radius * config.hexSize * config.noiseScale * 2),
-						ny / (config.radius * config.hexSize * config.noiseScale * 2)
-					) +
-						1) /
-					2;
-				const nNoise2 =
-					(elevationNoise2(
-						(nx / (config.radius * config.hexSize * config.noiseScale)) *
-							config.noiseDetail,
-						(ny / (config.radius * config.hexSize * config.noiseScale)) *
-							config.noiseDetail
-					) +
-						1) /
-					2;
-
-				const nElevation =
-					(nNoise1 * (1 - config.noiseFuzziness) +
-						nNoise2 * config.noiseFuzziness) *
-						0.8 +
-					(1 -
-						Math.sqrt(n.q * n.q + n.r * n.r + n.s * n.s) /
-							(config.radius + 1)) *
-						0.3;
-
-				const nHeight = BASE_HEIGHT + nElevation * config.gridHeight;
-				return nHeight < actualWaterLevel;
-			});
-
-			return hasNearbyWater ? 0.5 : 0;
-		};
-
-		// Adjust band sizes based on water level
-		const SHORE_BAND = 0.08; // Increased from 0.05
-		const BEACH_BAND = 0.15 + 0.2 * (1 - waterLevelFactor); // Increased from 0.1 + 0.15
-		const SHRUB_BAND = 0.15 + 0.1 * (1 - waterLevelFactor); // Adjusted to accommodate larger beach
-		const FOREST_BAND = 0.5 + 0.25 * (1 - waterLevelFactor);
-		const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor);
-
-		// Determine terrain type based on height relative to water and proximity
-		let terrainType: TerrainType;
-		let waterDepth: number = 0;
-
-		if (height < actualWaterLevel) {
-			terrainType = TerrainType.WATER;
-			waterDepth = Math.max(
-				0,
-				(height - BASE_HEIGHT) / (actualWaterLevel - BASE_HEIGHT)
-			);
-		} else {
-			// Get water proximity (1 for adjacent, 0.5 for nearby, 0 for far)
-			const waterProximity = getWaterProximity();
-
-			if (normalizedHeightAboveWater < SHORE_BAND && waterProximity > 0) {
-				terrainType = TerrainType.SHORE;
-			} else if (
-				normalizedHeightAboveWater < BEACH_BAND &&
-				waterProximity > 0
-			) {
-				terrainType = TerrainType.BEACH;
-			} else if (normalizedHeightAboveWater < SHRUB_BAND) {
-				terrainType = TerrainType.SHRUB;
-			} else if (normalizedHeightAboveWater < FOREST_BAND) {
-				terrainType = TerrainType.FOREST;
-			} else if (
-				normalizedHeightAboveWater < STONE_BAND ||
-				waterLevelFactor < 0.4
-			) {
-				terrainType = TerrainType.STONE;
-			} else {
-				terrainType = TerrainType.SNOW;
+		// Check first ring
+		for (const [dq, dr, ds] of ring1Offsets) {
+			const nHeight = calculateHeight(hex.q + dq, hex.r + dr, hex.s + ds);
+			if (nHeight < actualWaterLevel) {
+				waterProximity = 1;
+				break;
 			}
+		}
+
+		// Only check second ring if needed
+		if (waterProximity === 0) {
+			for (const [dq, dr, ds] of ring2Offsets) {
+				const nHeight = calculateHeight(hex.q + dq, hex.r + dr, hex.s + ds);
+				if (nHeight < actualWaterLevel) {
+					waterProximity = 0.5;
+					break;
+				}
+			}
+		}
+
+		// Determine terrain type
+		let terrainType: TerrainType;
+		if (normalizedHeightAboveWater < SHORE_BAND && waterProximity > 0) {
+			terrainType = TerrainType.SHORE;
+		} else if (normalizedHeightAboveWater < BEACH_BAND && waterProximity > 0) {
+			terrainType = TerrainType.BEACH;
+		} else if (normalizedHeightAboveWater < SHRUB_BAND) {
+			terrainType = TerrainType.SHRUB;
+		} else if (normalizedHeightAboveWater < FOREST_BAND) {
+			terrainType = TerrainType.FOREST;
+		} else if (
+			normalizedHeightAboveWater < STONE_BAND ||
+			waterLevelFactor < 0.4
+		) {
+			terrainType = TerrainType.STONE;
+		} else {
+			terrainType = TerrainType.SNOW;
 		}
 
 		return {
 			id: getHexId(hex),
 			coord: hex,
-			elevation: finalHeight, // Use the flat water level for visual height
+			elevation: finalHeight,
 			terrainType,
-			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
+			waterDepth: 0,
 		};
 	});
 }

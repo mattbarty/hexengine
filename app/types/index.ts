@@ -44,8 +44,6 @@ export interface HexTile {
 	coord: HexCoord;
 	elevation: number;
 	terrainType: TerrainType;
-	humidity: number;
-	temperature: number;
 	waterDepth?: number;
 }
 

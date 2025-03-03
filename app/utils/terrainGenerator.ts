@@ -59,11 +59,7 @@ export function generateTerrain(
 				(config.radius + 1);
 
 		// Combine with distance factor to create island-like terrain
-		let elevation = normalizedElevation * 0.7 + centerDistanceFactor * 0.3;
-
-		// Add humidity and temperature variations with larger scale for smoother transitions
-		const humidity = (humidityNoise(nx1, ny1) + 1) / 2;
-		const temperature = (temperatureNoise(nx1, ny1) + 1) / 2;
+		let elevation = normalizedElevation * 0.8 + centerDistanceFactor * 0.3;
 
 		// Determine terrain type based on thresholds
 		let terrainType: TerrainType;
@@ -72,7 +68,6 @@ export function generateTerrain(
 		let prevThreshold: number = 0;
 		let nextThreshold: number = 0;
 		let waterDepth: number = 0;
-		let peakFactor: number = 0;
 
 		// Use the terrain thresholds to determine the terrain type
 		if (elevation < TerrainThresholds[TerrainType.WATER]) {
@@ -111,23 +106,15 @@ export function generateTerrain(
 		} else if (elevation < TerrainThresholds[TerrainType.STONE]) {
 			terrainType = TerrainType.STONE;
 			terrainHeight = 0.12; // Stone terrain significantly higher
-			heightRange = 0.08;
+			heightRange = 0.1;
 			prevThreshold = TerrainThresholds[TerrainType.FOREST];
 			nextThreshold = TerrainThresholds[TerrainType.STONE];
 		} else {
 			terrainType = TerrainType.SNOW;
-			terrainHeight = 0.2; // Snow caps at highest elevation
+			terrainHeight = 0.22; // Snow caps at highest elevation
 			heightRange = 0.1; // Large range for dramatic peaks
 			prevThreshold = TerrainThresholds[TerrainType.STONE];
 			nextThreshold = TerrainThresholds[TerrainType.SNOW];
-
-			// Add additional peak noise for snow terrain
-			// This creates more dramatic mountain peaks
-			const nxp =
-				x / (config.radius * config.hexSize * config.noiseScale * 0.5);
-			const nyp =
-				y / (config.radius * config.hexSize * config.noiseScale * 0.5);
-			peakFactor = (peakNoise(nxp, nyp) + 1) / 2;
 		}
 
 		// Calculate normalized position within the current terrain range
@@ -155,8 +142,6 @@ export function generateTerrain(
 			coord: hex,
 			elevation: scaledElevation,
 			terrainType,
-			humidity,
-			temperature,
 			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
 		};
 	});

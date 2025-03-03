@@ -61,17 +61,20 @@ export function generateTerrain(
 		// Calculate the actual height from the noise
 		const height = BASE_HEIGHT + elevation * config.gridHeight;
 
-		// Calculate relative height (0-1 scale)
-		const heightAboveBase = height - BASE_HEIGHT;
-		const relativeHeight = heightAboveBase / config.gridHeight;
-
 		// Calculate the actual water level height
 		const actualWaterLevel =
 			BASE_HEIGHT + config.waterLevel * config.gridHeight;
 
-		// Calculate height relative to water level
+		// For points below water, set their visual height to exactly the water level
+		const finalHeight = height < actualWaterLevel ? actualWaterLevel : height;
+
+		// Calculate height relative to water level using ORIGINAL height for water detection
 		const heightAboveWater = height - actualWaterLevel;
 		const normalizedHeightAboveWater = heightAboveWater / config.gridHeight;
+
+		// Calculate relative height (0-1 scale) using the final height for terrain bands
+		const heightAboveBase = finalHeight - BASE_HEIGHT;
+		const relativeHeight = heightAboveBase / config.gridHeight;
 
 		// Define dynamic terrain bands based on water level
 		// When water level is low, expand middle terrain types
@@ -90,12 +93,12 @@ export function generateTerrain(
 		let terrainType: TerrainType;
 		let waterDepth: number = 0;
 
-		if (heightAboveWater < 0) {
+		if (height < actualWaterLevel) {
 			terrainType = TerrainType.WATER;
-			// Water depth is normalized based on how far below water level we are
+			// Calculate water depth based on the original terrain height
 			waterDepth = Math.max(
 				0,
-				1 + heightAboveWater / (actualWaterLevel - BASE_HEIGHT)
+				(height - BASE_HEIGHT) / (actualWaterLevel - BASE_HEIGHT)
 			);
 		} else if (normalizedHeightAboveWater < SHORE_BAND) {
 			terrainType = TerrainType.SHORE;
@@ -117,7 +120,7 @@ export function generateTerrain(
 		return {
 			id: getHexId(hex),
 			coord: hex,
-			elevation: height,
+			elevation: finalHeight, // Use the flat water level for visual height
 			terrainType,
 			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
 		};

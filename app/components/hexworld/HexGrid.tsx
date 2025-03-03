@@ -4,6 +4,7 @@ import { getHexesInRadius } from '../../utils/hexUtils';
 import { generateTerrain } from '../../utils/terrainGenerator';
 import HexTile from './HexTile';
 import Tree from './Tree';
+import Grass from './Grass';
 
 interface HexGridProps {
   config: HexGridConfig;
@@ -35,6 +36,7 @@ export default function HexGrid({ config, seed, onGridCreated }: HexGridProps) {
         />
       ))}
       <Tree tiles={tiles} hexSize={config.hexSize} />
+      <Grass tiles={tiles} hexSize={config.hexSize} />
     </group>
   );
 } 

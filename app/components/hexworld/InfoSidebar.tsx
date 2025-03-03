@@ -97,6 +97,25 @@ export default function InfoSidebar({
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
+            Water Level: {(localConfig.grid.waterLevel * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={localConfig.grid.waterLevel}
+            onChange={(e) => handleConfigChange('grid', 'waterLevel', e.target.value)}
+            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs mt-1">
+            <span>Low</span>
+            <span>High</span>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
             Scale: {localConfig.grid.noiseScale.toFixed(2)}
           </label>
           <input

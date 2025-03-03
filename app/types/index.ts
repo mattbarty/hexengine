@@ -55,6 +55,7 @@ export interface HexGridConfig {
 	noiseScale: number; // Scale for Perlin noise
 	noiseDetail: number; // Detail level for noise (0-1)
 	noiseFuzziness: number; // Fuzziness of the noise (0-1)
+	waterLevel: number; // Height threshold for water (0-1)
 }
 
 // Camera settings

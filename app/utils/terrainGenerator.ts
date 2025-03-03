@@ -61,39 +61,55 @@ export function generateTerrain(
 		// Calculate the actual height from the noise
 		const height = BASE_HEIGHT + elevation * config.gridHeight;
 
+		// Calculate relative height (0-1 scale)
+		const heightAboveBase = height - BASE_HEIGHT;
+		const relativeHeight = heightAboveBase / config.gridHeight;
+
+		// Calculate the actual water level height
+		const actualWaterLevel =
+			BASE_HEIGHT + config.waterLevel * config.gridHeight;
+
 		// Determine terrain type based on height relative to water level
 		let terrainType: TerrainType;
 		let waterDepth: number = 0;
 
-		// Calculate how high above base level we are
-		const heightAboveBase = height - BASE_HEIGHT;
-		const relativeHeight = heightAboveBase / config.gridHeight; // This will be 0-1
+		// Calculate height relative to water level
+		const heightAboveWater = height - actualWaterLevel;
+		const normalizedHeightAboveWater = heightAboveWater / config.gridHeight;
 
-		// Determine terrain type based on relative height
-		if (relativeHeight < TerrainThresholds[TerrainType.WATER]) {
+		// Define relative height bands for each terrain type
+		const SHORE_BAND = 0.05; // How far above water for shore
+		const BEACH_BAND = 0.1; // How far above water for beach
+		const SHRUB_BAND = 0.2; // etc.
+		const FOREST_BAND = 0.3;
+		const STONE_BAND = 0.4;
+
+		// Determine terrain type based on height relative to water
+		if (heightAboveWater < 0) {
 			terrainType = TerrainType.WATER;
-			waterDepth = relativeHeight / TerrainThresholds[TerrainType.WATER];
-		} else if (relativeHeight < TerrainThresholds[TerrainType.SHORE]) {
+			// Water depth is normalized based on how far below water level we are
+			waterDepth = Math.max(
+				0,
+				1 + heightAboveWater / (actualWaterLevel - BASE_HEIGHT)
+			);
+		} else if (normalizedHeightAboveWater < SHORE_BAND) {
 			terrainType = TerrainType.SHORE;
-		} else if (relativeHeight < TerrainThresholds[TerrainType.BEACH]) {
+		} else if (normalizedHeightAboveWater < BEACH_BAND) {
 			terrainType = TerrainType.BEACH;
-		} else if (relativeHeight < TerrainThresholds[TerrainType.SHRUB]) {
+		} else if (normalizedHeightAboveWater < SHRUB_BAND) {
 			terrainType = TerrainType.SHRUB;
-		} else if (relativeHeight < TerrainThresholds[TerrainType.FOREST]) {
+		} else if (normalizedHeightAboveWater < FOREST_BAND) {
 			terrainType = TerrainType.FOREST;
-		} else if (relativeHeight < TerrainThresholds[TerrainType.STONE]) {
+		} else if (normalizedHeightAboveWater < STONE_BAND) {
 			terrainType = TerrainType.STONE;
 		} else {
 			terrainType = TerrainType.SNOW;
 		}
 
-		// Use natural height for all terrain types including water
-		const finalHeight = height;
-
 		return {
 			id: getHexId(hex),
 			coord: hex,
-			elevation: finalHeight,
+			elevation: height,
 			terrainType,
 			waterDepth: terrainType === TerrainType.WATER ? waterDepth : 0,
 		};

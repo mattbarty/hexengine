@@ -13,7 +13,8 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
     gridHeight: 15,
     noiseScale: 1,
     noiseDetail: 0.45,
-    noiseFuzziness: 1
+    noiseFuzziness: 1,
+    waterLevel: 0.3
   },
   camera: {
     position: [0, 40, 50],

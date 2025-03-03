@@ -81,40 +81,156 @@ export function generateTerrain(
 		// When water level is high, compress middle terrain types
 		const waterLevelFactor = Math.max(0.2, Math.min(0.8, config.waterLevel));
 
-		// Adjust band sizes based on water level
-		const SHORE_BAND = 0.05; // Shore always stays small for realism
-		const BEACH_BAND = 0.1 + 0.15 * (1 - waterLevelFactor); // Beaches expand when water is low
-		const SHRUB_BAND = 0.25 + 0.2 * (1 - waterLevelFactor); // Shrubland expands when water is low
-		const FOREST_BAND = 0.45 + 0.25 * (1 - waterLevelFactor); // Forest expands when water is low
-		const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor); // Stone becomes more prevalent with low water
-		// Snow only appears when water level is higher (more mountainous terrain)
+		// Helper function to check if a hex is within range of water
+		const getWaterProximity = () => {
+			// Check two rings of hexes
+			const ring1 = [
+				{ q: hex.q + 1, r: hex.r - 1, s: hex.s },
+				{ q: hex.q + 1, r: hex.r, s: hex.s - 1 },
+				{ q: hex.q, r: hex.r + 1, s: hex.s - 1 },
+				{ q: hex.q - 1, r: hex.r + 1, s: hex.s },
+				{ q: hex.q - 1, r: hex.r, s: hex.s + 1 },
+				{ q: hex.q, r: hex.r - 1, s: hex.s + 1 },
+			];
 
-		// Determine terrain type based on height relative to water
+			const ring2 = [
+				{ q: hex.q + 2, r: hex.r - 2, s: hex.s },
+				{ q: hex.q + 2, r: hex.r - 1, s: hex.s - 1 },
+				{ q: hex.q + 2, r: hex.r, s: hex.s - 2 },
+				{ q: hex.q + 1, r: hex.r + 1, s: hex.s - 2 },
+				{ q: hex.q, r: hex.r + 2, s: hex.s - 2 },
+				{ q: hex.q - 1, r: hex.r + 2, s: hex.s - 1 },
+				{ q: hex.q - 2, r: hex.r + 2, s: hex.s },
+				{ q: hex.q - 2, r: hex.r + 1, s: hex.s + 1 },
+				{ q: hex.q - 2, r: hex.r, s: hex.s + 2 },
+				{ q: hex.q - 1, r: hex.r - 1, s: hex.s + 2 },
+				{ q: hex.q, r: hex.r - 2, s: hex.s + 2 },
+				{ q: hex.q + 1, r: hex.r - 2, s: hex.s + 1 },
+			];
+
+			let proximity = 0;
+
+			// Check first ring (immediate neighbors)
+			const hasAdjacentWater = ring1.some((n) => {
+				if (
+					Math.max(Math.abs(n.q), Math.abs(n.r), Math.abs(n.s)) > config.radius
+				) {
+					return false;
+				}
+				const [nx, ny] = hexToPixel(n, config.hexSize);
+				const nNoise1 =
+					(elevationNoise(
+						nx / (config.radius * config.hexSize * config.noiseScale * 2),
+						ny / (config.radius * config.hexSize * config.noiseScale * 2)
+					) +
+						1) /
+					2;
+				const nNoise2 =
+					(elevationNoise2(
+						(nx / (config.radius * config.hexSize * config.noiseScale)) *
+							config.noiseDetail,
+						(ny / (config.radius * config.hexSize * config.noiseScale)) *
+							config.noiseDetail
+					) +
+						1) /
+					2;
+
+				const nElevation =
+					(nNoise1 * (1 - config.noiseFuzziness) +
+						nNoise2 * config.noiseFuzziness) *
+						0.8 +
+					(1 -
+						Math.sqrt(n.q * n.q + n.r * n.r + n.s * n.s) /
+							(config.radius + 1)) *
+						0.3;
+
+				const nHeight = BASE_HEIGHT + nElevation * config.gridHeight;
+				return nHeight < actualWaterLevel;
+			});
+
+			if (hasAdjacentWater) return 1;
+
+			// Check second ring if no adjacent water
+			const hasNearbyWater = ring2.some((n) => {
+				if (
+					Math.max(Math.abs(n.q), Math.abs(n.r), Math.abs(n.s)) > config.radius
+				) {
+					return false;
+				}
+				const [nx, ny] = hexToPixel(n, config.hexSize);
+				const nNoise1 =
+					(elevationNoise(
+						nx / (config.radius * config.hexSize * config.noiseScale * 2),
+						ny / (config.radius * config.hexSize * config.noiseScale * 2)
+					) +
+						1) /
+					2;
+				const nNoise2 =
+					(elevationNoise2(
+						(nx / (config.radius * config.hexSize * config.noiseScale)) *
+							config.noiseDetail,
+						(ny / (config.radius * config.hexSize * config.noiseScale)) *
+							config.noiseDetail
+					) +
+						1) /
+					2;
+
+				const nElevation =
+					(nNoise1 * (1 - config.noiseFuzziness) +
+						nNoise2 * config.noiseFuzziness) *
+						0.8 +
+					(1 -
+						Math.sqrt(n.q * n.q + n.r * n.r + n.s * n.s) /
+							(config.radius + 1)) *
+						0.3;
+
+				const nHeight = BASE_HEIGHT + nElevation * config.gridHeight;
+				return nHeight < actualWaterLevel;
+			});
+
+			return hasNearbyWater ? 0.5 : 0;
+		};
+
+		// Adjust band sizes based on water level
+		const SHORE_BAND = 0.08; // Increased from 0.05
+		const BEACH_BAND = 0.15 + 0.2 * (1 - waterLevelFactor); // Increased from 0.1 + 0.15
+		const SHRUB_BAND = 0.15 + 0.1 * (1 - waterLevelFactor); // Adjusted to accommodate larger beach
+		const FOREST_BAND = 0.5 + 0.25 * (1 - waterLevelFactor);
+		const STONE_BAND = 0.7 + 0.2 * (1 - waterLevelFactor);
+
+		// Determine terrain type based on height relative to water and proximity
 		let terrainType: TerrainType;
 		let waterDepth: number = 0;
 
 		if (height < actualWaterLevel) {
 			terrainType = TerrainType.WATER;
-			// Calculate water depth based on the original terrain height
 			waterDepth = Math.max(
 				0,
 				(height - BASE_HEIGHT) / (actualWaterLevel - BASE_HEIGHT)
 			);
-		} else if (normalizedHeightAboveWater < SHORE_BAND) {
-			terrainType = TerrainType.SHORE;
-		} else if (normalizedHeightAboveWater < BEACH_BAND) {
-			terrainType = TerrainType.BEACH;
-		} else if (normalizedHeightAboveWater < SHRUB_BAND) {
-			terrainType = TerrainType.SHRUB;
-		} else if (normalizedHeightAboveWater < FOREST_BAND) {
-			terrainType = TerrainType.FOREST;
-		} else if (
-			normalizedHeightAboveWater < STONE_BAND ||
-			waterLevelFactor < 0.4
-		) {
-			terrainType = TerrainType.STONE;
 		} else {
-			terrainType = TerrainType.SNOW;
+			// Get water proximity (1 for adjacent, 0.5 for nearby, 0 for far)
+			const waterProximity = getWaterProximity();
+
+			if (normalizedHeightAboveWater < SHORE_BAND && waterProximity > 0) {
+				terrainType = TerrainType.SHORE;
+			} else if (
+				normalizedHeightAboveWater < BEACH_BAND &&
+				waterProximity > 0
+			) {
+				terrainType = TerrainType.BEACH;
+			} else if (normalizedHeightAboveWater < SHRUB_BAND) {
+				terrainType = TerrainType.SHRUB;
+			} else if (normalizedHeightAboveWater < FOREST_BAND) {
+				terrainType = TerrainType.FOREST;
+			} else if (
+				normalizedHeightAboveWater < STONE_BAND ||
+				waterLevelFactor < 0.4
+			) {
+				terrainType = TerrainType.STONE;
+			} else {
+				terrainType = TerrainType.SNOW;
+			}
 		}
 
 		return {

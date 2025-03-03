@@ -10,7 +10,7 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
     radius: 20,
     hexSize: 1,
-    gridHeight: 50,
+    gridHeight: 15,
     noiseScale: 1,
     noiseDetail: 0.45,
     noiseFuzziness: 1

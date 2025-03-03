@@ -99,9 +99,9 @@ export function generateTerrain(
 	const SHORE_BAND = 0.1;
 	const BEACH_BAND = 0.1 + 0.5 * (1 - waterLevelFactor);
 	const SHRUB_BAND = 0.12 + 0.1 * (1 - waterLevelFactor);
-	const FOREST_BAND = 0.5 + 0.1 * (1 - waterLevelFactor);
-	const STONE_BAND = 0.6 + 0.1 * (1 - waterLevelFactor);
-	const SNOW_BAND = 0.75;
+	const FOREST_BAND = 0.55 + 0.1 * (1 - waterLevelFactor);
+	const STONE_BAND = 0.8 + 0.1 * (1 - waterLevelFactor);
+	const SNOW_BAND = 0.85;
 
 	return hexes.map((hex) => {
 		// Get or calculate height for current hex

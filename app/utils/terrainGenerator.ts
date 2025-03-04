@@ -52,6 +52,8 @@ export function generateTerrain(
 	const elevationNoise2 = createNoise2D(() => seed + 0.5);
 	const warpNoise = createNoise2D(() => seed + 0.75);
 	const varietyNoise = createNoise2D(() => seed + 0.25);
+	const oceanNoise = createNoise2D(() => seed + 0.125);
+	const mountainNoise = createNoise2D(() => seed + 0.875); // New noise for mountain variation
 
 	// Define minimum base height that all terrain will extrude from
 	const BASE_HEIGHT = 1.5;
@@ -103,6 +105,26 @@ export function generateTerrain(
 		const wx = Number.isFinite(x + warpX) ? x + warpX : x;
 		const wy = Number.isFinite(y + warpY) ? y + warpY : y;
 
+		// Calculate local tendencies using noise
+		const regionScale = 0.3; // Controls how quickly regional variations occur
+		const nx_region = (wx / (config.radius * config.hexSize)) * regionScale;
+		const ny_region = (wy / (config.radius * config.hexSize)) * regionScale;
+
+		// Calculate ocean and mountain tendencies
+		const localOceanTendency = Math.max(
+			0,
+			Math.min(1, (oceanNoise(nx_region, ny_region) + 1) / 2)
+		);
+
+		// Offset mountain noise to create different patterns
+		const localMountainTendency = Math.max(
+			0,
+			Math.min(
+				1,
+				(mountainNoise(nx_region + 31.416, ny_region - 31.416) + 1) / 2
+			)
+		);
+
 		// First octave - large features
 		const nx1 =
 			wx /
@@ -133,7 +155,7 @@ export function generateTerrain(
 			)
 		);
 
-		// Calculate base elevation with safety checks
+		// Calculate base elevation
 		let normalizedElevation = Math.max(
 			0,
 			Math.min(
@@ -143,6 +165,11 @@ export function generateTerrain(
 			)
 		);
 
+		// Apply ocean influence
+		const oceanInfluence = Math.pow(localOceanTendency, 1.5);
+		normalizedElevation =
+			normalizedElevation * (1.6 - oceanInfluence) - 0.3 * oceanInfluence;
+
 		// Apply variety modifications with safety checks
 		const centerDistanceFactor = Math.max(
 			0,
@@ -150,33 +177,54 @@ export function generateTerrain(
 		);
 
 		// Mix between pure noise and island shape based on islandFactor
-		normalizedElevation = Math.max(
-			0,
-			Math.min(
-				1,
-				normalizedElevation * (1 - islandFactor) +
-					(normalizedElevation * 0.7 + centerDistanceFactor * 0.3) *
-						islandFactor
-			)
-		);
-
-		// Apply mountainousness factor
-		normalizedElevation = Math.max(
-			0,
-			Math.min(1, Math.pow(normalizedElevation, 1 - mountainousness * 0.5))
-		);
-
-		// Add some random elevation spikes for mountain ranges
-		const spikiness = Math.max(0, Math.min(1, varietyNoise(nx1 * 2, ny1 * 2)));
-		if (spikiness > 0.7 && normalizedElevation > 0.5) {
+		if (islandFactor > 0) {
+			const localIslandFactor =
+				islandFactor * Math.max(0.3, localOceanTendency);
+			const islandShape =
+				normalizedElevation * 0.7 + centerDistanceFactor * 0.3;
 			normalizedElevation = Math.max(
 				0,
 				Math.min(
 					1,
-					normalizedElevation + (spikiness - 0.7) * mountainousness * 0.5
+					normalizedElevation * (1 - localIslandFactor) +
+						islandShape * localIslandFactor
 				)
 			);
 		}
+
+		// Apply regional mountain influence
+		if (normalizedElevation > 0.3) {
+			// Only affect higher terrain
+			const mountainInfluence = Math.pow(localMountainTendency, 2); // Sharper mountain regions
+			const mountainEffect =
+				Math.pow((normalizedElevation - 0.3) / 0.7, 1.5) * mountainInfluence;
+
+			// Mix between flat and mountainous terrain
+			normalizedElevation = Math.max(
+				0,
+				Math.min(
+					1,
+					normalizedElevation * (1 - mountainInfluence * 0.7) + // Reduce base height in mountain regions
+						(normalizedElevation + mountainEffect * 0.5) * mountainInfluence // Add mountain peaks
+				)
+			);
+		}
+
+		// Add some random elevation spikes for local variation
+		const spikiness = Math.max(0, Math.min(1, varietyNoise(nx1 * 2, ny1 * 2)));
+		if (spikiness > 0.8 && normalizedElevation > 0.5) {
+			const spikeIntensity = Math.min(0.3, (spikiness - 0.8) * 1.5);
+			normalizedElevation = Math.max(
+				0,
+				Math.min(
+					1,
+					normalizedElevation + spikeIntensity * localMountainTendency
+				)
+			);
+		}
+
+		// Ensure elevation stays within bounds
+		normalizedElevation = Math.max(0, Math.min(1, normalizedElevation));
 
 		// Calculate final height with safety check
 		const height = Math.max(

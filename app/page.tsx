@@ -35,6 +35,7 @@ export default function Home() {
   // State to control client-side rendering
   const [isClient, setIsClient] = useState(false);
   const [selectedTile, setSelectedTile] = useState<HexTile | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Initialize worldConfig with a fixed seed for initial render
   const [worldConfig, setWorldConfig] = useState<WorldConfig>({
@@ -79,20 +80,31 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-gray-900">
-      <div className="flex-grow relative">
-        <div className="absolute inset-0">
-          <HexWorld
-            key={worldKey}
-            config={worldConfig}
-          />
-        </div>
+    <div className="relative h-screen w-full bg-gray-900 overflow-hidden">
+      <div className="absolute inset-0">
+        <HexWorld
+          key={worldKey}
+          config={worldConfig}
+        />
       </div>
-      <InfoSidebar
-        worldConfig={worldConfig}
-        onConfigChange={handleConfigChange}
-        onRefresh={handleRefresh}
-      />
+
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="absolute top-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+      >
+        {isSidebarOpen ? 'Close Settings' : 'Open Settings'}
+      </button>
+
+      {/* InfoSidebar with transition */}
+      <div className={`absolute top-0 right-0 h-full transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+        <InfoSidebar
+          worldConfig={worldConfig}
+          onConfigChange={handleConfigChange}
+          onRefresh={handleRefresh}
+        />
+      </div>
     </div>
   );
 }

@@ -8,12 +8,12 @@ import { HexTile, WorldConfig } from './types';
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
-    radius: 25,
+    radius: 30,
     hexSize: 1,
     gridHeight: 14,
-    noiseScale: 1.45,
-    noiseDetail: 0.75,
-    noiseFuzziness: 1,
+    noiseScale: 1.35,
+    noiseDetail: 0.35,
+    noiseFuzziness: 0.4,
     waterLevel: 0.2,
     terrainBands: {
       shore: 0.1,

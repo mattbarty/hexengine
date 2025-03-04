@@ -55,8 +55,9 @@ export function generateTerrain(
 	const oceanNoise = createNoise2D(() => seed + 0.125);
 	const mountainNoise = createNoise2D(() => seed + 0.875); // New noise for mountain variation
 
-	// Define minimum base height that all terrain will extrude from
+	// Define constants
 	const BASE_HEIGHT = 1.5;
+	const regionScale = 0.3; // Controls how quickly regional variations occur
 
 	// Pre-calculate heights for all hexes in a map to avoid recalculation
 	const heightMap = new Map<string, number>();
@@ -106,7 +107,6 @@ export function generateTerrain(
 		const wy = Number.isFinite(y + warpY) ? y + warpY : y;
 
 		// Calculate local tendencies using noise
-		const regionScale = 0.3; // Controls how quickly regional variations occur
 		const nx_region = (wx / (config.radius * config.hexSize)) * regionScale;
 		const ny_region = (wy / (config.radius * config.hexSize)) * regionScale;
 
@@ -194,26 +194,32 @@ export function generateTerrain(
 
 		// Apply regional mountain influence
 		if (normalizedElevation > 0.3) {
-			// Only affect higher terrain
 			const mountainInfluence = Math.pow(localMountainTendency, 2); // Sharper mountain regions
 			const mountainEffect =
 				Math.pow((normalizedElevation - 0.3) / 0.7, 1.5) * mountainInfluence;
 
-			// Mix between flat and mountainous terrain
+			// Mix between flat and mountainous terrain with increased height potential
 			normalizedElevation = Math.max(
 				0,
 				Math.min(
 					1,
 					normalizedElevation * (1 - mountainInfluence * 0.7) + // Reduce base height in mountain regions
-						(normalizedElevation + mountainEffect * 0.5) * mountainInfluence // Add mountain peaks
+						(normalizedElevation + mountainEffect * 0.8) * mountainInfluence // Increased mountain peak factor
 				)
 			);
+
+			// Add extra height to the highest peaks in very mountainous regions
+			if (mountainInfluence > 0.8 && normalizedElevation > 0.75) {
+				const peakBonus =
+					(normalizedElevation - 0.75) * mountainInfluence * 0.5;
+				normalizedElevation = Math.min(1, normalizedElevation + peakBonus);
+			}
 		}
 
 		// Add some random elevation spikes for local variation
 		const spikiness = Math.max(0, Math.min(1, varietyNoise(nx1 * 2, ny1 * 2)));
 		if (spikiness > 0.8 && normalizedElevation > 0.5) {
-			const spikeIntensity = Math.min(0.3, (spikiness - 0.8) * 1.5);
+			const spikeIntensity = Math.min(0.4, (spikiness - 0.8) * 2); // Increased spike intensity
 			normalizedElevation = Math.max(
 				0,
 				Math.min(
@@ -290,8 +296,8 @@ export function generateTerrain(
 	const BEACH_BAND = 0.1 + 0.5 * (1 - waterLevelFactor);
 	const SHRUB_BAND = 0.12 + 0.1 * (1 - waterLevelFactor);
 	const FOREST_BAND = 0.55 + 0.1 * (1 - waterLevelFactor);
-	const STONE_BAND = 0.8 + 0.1 * (1 - waterLevelFactor);
-	const SNOW_BAND = 0.85;
+	const STONE_BAND = 0.75; // Lowered stone band
+	const SNOW_BAND = 0.92; // Lowered snow threshold
 
 	// Helper to check if a tile should be a cliff
 	const isCliff = (
@@ -365,10 +371,8 @@ export function generateTerrain(
 		// Determine terrain type
 		let terrainType: TerrainType;
 		if (normalizedHeightAboveWater < SHORE_BAND && waterProximity > 0) {
-			// If it's a potential shore/beach area but meets cliff criteria, make it stone
 			terrainType = cliffCheck ? TerrainType.STONE : TerrainType.SHORE;
 		} else if (normalizedHeightAboveWater < BEACH_BAND && waterProximity > 0) {
-			// If it's a potential beach area but meets cliff criteria, make it stone
 			terrainType = cliffCheck ? TerrainType.STONE : TerrainType.BEACH;
 		} else if (normalizedHeightAboveWater < SHRUB_BAND) {
 			terrainType = TerrainType.SHRUB;
@@ -379,7 +383,23 @@ export function generateTerrain(
 		} else if (normalizedHeightAboveWater < SNOW_BAND) {
 			terrainType = TerrainType.STONE;
 		} else {
-			terrainType = TerrainType.SNOW;
+			// Ensure very high mountains always get snow
+			const [x, y] = hexToPixel(hex, config.hexSize);
+			const nx_region = (x / (config.radius * config.hexSize)) * regionScale;
+			const ny_region = (y / (config.radius * config.hexSize)) * regionScale;
+			const localMountainCheck = Math.max(
+				0,
+				Math.min(
+					1,
+					(mountainNoise(nx_region + 31.416, ny_region - 31.416) + 1) / 2
+				)
+			);
+
+			// More likely to be snow in mountainous regions
+			terrainType =
+				localMountainCheck > 0.5 || normalizedHeightAboveWater > 0.9
+					? TerrainType.SNOW
+					: TerrainType.STONE;
 		}
 
 		return {

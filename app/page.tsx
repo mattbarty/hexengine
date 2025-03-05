@@ -14,7 +14,8 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
     noiseScale: 1.35,
     noiseDetail: 0.35,
     noiseFuzziness: 0.4,
-    waterLevel: 0.2,
+    // randomize water level
+    waterLevel: Math.random() * 0.2 + 0.2,
     terrainBands: {
       shore: 0.1,
       beach: 0.2,

@@ -343,30 +343,72 @@ export function generateTerrain(
 
 		// Collect neighbor heights for cliff detection
 		const neighborHeights: number[] = [];
+		const validNeighborHeights: number[] = []; // New array for valid neighbors only
 
 		// Check first ring
 		let waterProximity = 0;
 		for (const [dq, dr, ds] of ring1Offsets) {
-			const nHeight = calculateHeight(hex.q + dq, hex.r + dr, hex.s + ds);
+			const nq = hex.q + dq;
+			const nr = hex.r + dr;
+			const ns = hex.s + ds;
+
+			// Skip if neighbor is outside the grid
+			if (Math.max(Math.abs(nq), Math.abs(nr), Math.abs(ns)) > config.radius) {
+				continue;
+			}
+
+			const nHeight = calculateHeight(nq, nr, ns);
 			neighborHeights.push(nHeight);
+			validNeighborHeights.push(nHeight);
+
 			if (nHeight < actualWaterLevel) {
 				waterProximity = 1;
 			}
 		}
 
-		// Only check second ring if needed
-		if (waterProximity === 0) {
+		// Only check second ring if needed and first ring had valid neighbors
+		if (waterProximity === 0 && validNeighborHeights.length > 0) {
 			for (const [dq, dr, ds] of ring2Offsets) {
-				const nHeight = calculateHeight(hex.q + dq, hex.r + dr, hex.s + ds);
+				const nq = hex.q + dq;
+				const nr = hex.r + dr;
+				const ns = hex.s + ds;
+
+				// Skip if neighbor is outside the grid
+				if (
+					Math.max(Math.abs(nq), Math.abs(nr), Math.abs(ns)) > config.radius
+				) {
+					continue;
+				}
+
+				const nHeight = calculateHeight(nq, nr, ns);
 				neighborHeights.push(nHeight);
+				validNeighborHeights.push(nHeight);
+
 				if (nHeight < actualWaterLevel) {
 					waterProximity = 0.5;
 				}
 			}
 		}
 
-		// Check if this should be a cliff
-		const cliffCheck = isCliff(height, waterProximity, neighborHeights);
+		// Check if this should be a cliff (only if we have valid neighbors)
+		const cliffCheck =
+			validNeighborHeights.length > 0
+				? isCliff(height, waterProximity, validNeighborHeights)
+				: false;
+
+		// Helper to check if neighbors are high enough for snow (only consider valid neighbors)
+		const hasSnowNeighbor =
+			validNeighborHeights.length > 0 &&
+			validNeighborHeights.some(
+				(nh) => (nh - actualWaterLevel) / config.gridHeight > SNOW_BAND
+			);
+
+		// Helper to check if all neighbors are high enough for stone (only consider valid neighbors)
+		const allNeighborsStone =
+			validNeighborHeights.length > 0 &&
+			validNeighborHeights.every(
+				(nh) => (nh - actualWaterLevel) / config.gridHeight > STONE_BAND
+			);
 
 		// Determine terrain type
 		let terrainType: TerrainType;
@@ -381,9 +423,7 @@ export function generateTerrain(
 		} else if (normalizedHeightAboveWater < STONE_BAND) {
 			terrainType = TerrainType.STONE;
 		} else if (normalizedHeightAboveWater < SNOW_BAND) {
-			terrainType = TerrainType.STONE;
-		} else {
-			// Ensure very high mountains always get snow
+			// Check mountain influence for snow placement
 			const [x, y] = hexToPixel(hex, config.hexSize);
 			const nx_region = (x / (config.radius * config.hexSize)) * regionScale;
 			const ny_region = (y / (config.radius * config.hexSize)) * regionScale;
@@ -395,11 +435,40 @@ export function generateTerrain(
 				)
 			);
 
-			// More likely to be snow in mountainous regions
-			terrainType =
-				localMountainCheck > 0.5 || normalizedHeightAboveWater > 0.9
-					? TerrainType.SNOW
-					: TerrainType.STONE;
+			// For edge tiles, use only height and mountain influence
+			if (validNeighborHeights.length === 0) {
+				terrainType =
+					localMountainCheck > 0.6 ? TerrainType.STONE : TerrainType.FOREST;
+			} else {
+				terrainType = TerrainType.STONE;
+			}
+		} else {
+			// For highest points, consider snow based on height and mountain influence
+			const [x, y] = hexToPixel(hex, config.hexSize);
+			const nx_region = (x / (config.radius * config.hexSize)) * regionScale;
+			const ny_region = (y / (config.radius * config.hexSize)) * regionScale;
+			const localMountainCheck = Math.max(
+				0,
+				Math.min(
+					1,
+					(mountainNoise(nx_region + 31.416, ny_region - 31.416) + 1) / 2
+				)
+			);
+
+			// For edge tiles or very high points, use simpler logic
+			if (
+				validNeighborHeights.length === 0 ||
+				normalizedHeightAboveWater > 0.95
+			) {
+				terrainType = TerrainType.SNOW;
+			} else {
+				terrainType =
+					localMountainCheck > 0.6 &&
+					allNeighborsStone &&
+					(hasSnowNeighbor || normalizedHeightAboveWater > 0.92)
+						? TerrainType.SNOW
+						: TerrainType.STONE;
+			}
 		}
 
 		return {

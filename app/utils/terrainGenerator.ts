@@ -318,6 +318,42 @@ export function generateTerrain(
 		return heightDifference > CLIFF_THRESHOLD;
 	};
 
+	// Helper to check if a tile is part of a flat plateau
+	const isPartOfPlateau = (
+		height: number,
+		validNeighborHeights: number[],
+		gridHeight: number
+	): { isPlateau: boolean; isEdge: boolean } => {
+		if (validNeighborHeights.length < 3)
+			return { isPlateau: false, isEdge: false };
+
+		// Calculate height differences with neighbors
+		const heightDifferences = validNeighborHeights.map(
+			(nh) => Math.abs(height - nh) / gridHeight
+		);
+
+		// Count how many neighbors are at a similar height (small difference)
+		const PLATEAU_THRESHOLD = 0.05; // 5% height difference threshold
+		const EDGE_THRESHOLD = 0.15; // 15% height difference for edge detection
+		const similarHeightCount = heightDifferences.filter(
+			(diff) => diff < PLATEAU_THRESHOLD
+		).length;
+
+		// Check if any neighbors have a significant height difference (edge detection)
+		const hasSignificantDrop = heightDifferences.some(
+			(diff) => diff > EDGE_THRESHOLD
+		);
+
+		// If most neighbors are at a similar height, it's part of a plateau
+		const isPlateau =
+			similarHeightCount >= Math.min(4, validNeighborHeights.length * 0.75);
+
+		return {
+			isPlateau,
+			isEdge: isPlateau && hasSignificantDrop, // Only consider it an edge if it's part of a plateau
+		};
+	};
+
 	return hexes.map((hex) => {
 		// Get or calculate height for current hex
 		const height = calculateHeight(hex.q, hex.r, hex.s);
@@ -421,7 +457,14 @@ export function generateTerrain(
 		} else if (normalizedHeightAboveWater < FOREST_BAND) {
 			terrainType = TerrainType.FOREST;
 		} else if (normalizedHeightAboveWater < STONE_BAND) {
-			terrainType = TerrainType.STONE;
+			// Check if this is part of a plateau
+			const { isPlateau, isEdge } = isPartOfPlateau(
+				height,
+				validNeighborHeights,
+				config.gridHeight
+			);
+			terrainType =
+				isPlateau && !isEdge ? TerrainType.FOREST : TerrainType.STONE;
 		} else if (normalizedHeightAboveWater < SNOW_BAND) {
 			// Check mountain influence for snow placement
 			const [x, y] = hexToPixel(hex, config.hexSize);
@@ -435,12 +478,23 @@ export function generateTerrain(
 				)
 			);
 
+			// Check for plateaus at high elevations
+			const { isPlateau, isEdge } = isPartOfPlateau(
+				height,
+				validNeighborHeights,
+				config.gridHeight
+			);
+
 			// For edge tiles, use only height and mountain influence
 			if (validNeighborHeights.length === 0) {
 				terrainType =
 					localMountainCheck > 0.6 ? TerrainType.STONE : TerrainType.FOREST;
 			} else {
-				terrainType = TerrainType.STONE;
+				// Keep edges as stone, convert only inner plateau areas to forest
+				terrainType =
+					isPlateau && !isEdge && normalizedHeightAboveWater < 0.85
+						? TerrainType.FOREST
+						: TerrainType.STONE;
 			}
 		} else {
 			// For highest points, consider snow based on height and mountain influence
@@ -455,6 +509,13 @@ export function generateTerrain(
 				)
 			);
 
+			// Check for plateaus at snow level
+			const { isPlateau, isEdge } = isPartOfPlateau(
+				height,
+				validNeighborHeights,
+				config.gridHeight
+			);
+
 			// For edge tiles or very high points, use simpler logic
 			if (
 				validNeighborHeights.length === 0 ||
@@ -462,12 +523,17 @@ export function generateTerrain(
 			) {
 				terrainType = TerrainType.SNOW;
 			} else {
-				terrainType =
-					localMountainCheck > 0.6 &&
-					allNeighborsStone &&
-					(hasSnowNeighbor || normalizedHeightAboveWater > 0.92)
-						? TerrainType.SNOW
-						: TerrainType.STONE;
+				// Keep edges as stone/snow, only convert inner plateau areas
+				if (isPlateau && !isEdge && normalizedHeightAboveWater < 0.94) {
+					terrainType = TerrainType.STONE;
+				} else {
+					terrainType =
+						localMountainCheck > 0.6 &&
+						allNeighborsStone &&
+						(hasSnowNeighbor || normalizedHeightAboveWater > 0.92)
+							? TerrainType.SNOW
+							: TerrainType.STONE;
+				}
 			}
 		}
 

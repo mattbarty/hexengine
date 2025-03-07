@@ -16,14 +16,25 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
     noiseFuzziness: 0.4,
     // randomize water level
     waterLevel: Math.random() * 0.2 + 0.2,
-    terrainBands: {
-      shore: 0.1,
-      beach: 0.2,
-      shrub: 0.3,
-      forest: 0.55,
-      stone: 0.8,
-      snow: 0.85
-    }
+    // Randomize terrain bands while maintaining proper ordering
+    terrainBands: (() => {
+      // Base values
+      const shore = Math.random() * 0.05 + 0.08; // 0.08-0.13
+      const beach = shore + Math.random() * 0.08 + 0.07; // shore + 0.07-0.15
+      const shrub = beach + Math.random() * 0.08 + 0.07; // beach + 0.07-0.15
+      const forest = shrub + Math.random() * 0.15 + 0.15; // shrub + 0.15-0.30
+      const stone = forest + Math.random() * 0.15 + 0.15; // forest + 0.15-0.30
+      const snow = stone + Math.random() * 0.1 + 0.05; // stone + 0.05-0.15
+
+      return {
+        shore,
+        beach,
+        shrub,
+        forest,
+        stone,
+        snow: Math.min(snow, 0.95) // Ensure snow doesn't go too high
+      };
+    })()
   },
   camera: {
     position: [0, 40, 50],

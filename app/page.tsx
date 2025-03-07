@@ -37,9 +37,9 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
     })()
   },
   camera: {
-    position: [0, 40, 50],
+    position: [0, 60, 80],
     rotation: [-Math.PI / 3, 0, 0],
-    fov: 45
+    fov: 60
   }
 };
 

@@ -32,8 +32,8 @@ export default function HexWorld({ config }: HexWorldProps) {
     const baseDistance = 90;
     const gridFactor = Math.max(1, config.grid.radius / 30); // Scale based on default radius of 30
     return {
-      minDistance: baseDistance,
-      maxDistance: baseDistance * (gridFactor * 1.5) // Increase max distance more aggressively
+      minDistance: baseDistance * 0.4, // Allow closer zoom
+      maxDistance: baseDistance * (gridFactor * 1.1) // Allow much further zoom out
     };
   }, [config.grid.radius]);
 

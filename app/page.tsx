@@ -81,30 +81,36 @@ export default function Home() {
   }
 
   return (
-    <div className="relative h-screen w-full bg-gray-900 overflow-hidden">
-      <div className="absolute inset-0">
+    <div className="flex h-screen w-full bg-gray-900 overflow-hidden">
+      {/* Main content area */}
+      <div className="flex-1 relative min-w-0">
         <HexWorld
           key={worldKey}
           config={worldConfig}
         />
+
+        {/* Settings Button - only shown when sidebar is closed */}
+        {!isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="fixed top-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+          >
+            Open Settings
+          </button>
+        )}
       </div>
 
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="absolute top-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+      {/* Sidebar with transition */}
+      <div
+        className={`flex-shrink-0 transition-[width] duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-80' : 'w-0'
+          }`}
       >
-        {isSidebarOpen ? 'Close Settings' : 'Open Settings'}
-      </button>
-
-      {/* InfoSidebar with transition */}
-      <div className={`absolute top-0 right-0 h-full transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
-        <InfoSidebar
+        {isSidebarOpen && <InfoSidebar
           worldConfig={worldConfig}
           onConfigChange={handleConfigChange}
           onRefresh={handleRefresh}
-        />
+          onClose={() => setIsSidebarOpen(false)}
+        />}
       </div>
     </div>
   );

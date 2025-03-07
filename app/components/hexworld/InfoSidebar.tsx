@@ -5,11 +5,13 @@ interface InfoSidebarProps {
   worldConfig: WorldConfig;
   onConfigChange: (newConfig: WorldConfig) => void;
   onRefresh: () => void;
+  onClose: () => void;
 }
 
 export default function InfoSidebar({
   worldConfig,
-  onConfigChange
+  onConfigChange,
+  onClose
 }: InfoSidebarProps) {
   // Local state for config values
   const [localConfig, setLocalConfig] = useState(worldConfig);
@@ -31,9 +33,31 @@ export default function InfoSidebar({
   };
 
   return (
-    <div className="w-80 h-full bg-gray-800/95 backdrop-blur-sm text-white overflow-y-auto shadow-xl">
+    <div className="h-full bg-gray-800/95 backdrop-blur-sm text-white overflow-y-auto shadow-xl">
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-blue-400">World Settings</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-blue-400">World Settings</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+            aria-label="Close settings"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-gray-400 hover:text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
 
         <div className="space-y-8">
           {/* World Scale */}

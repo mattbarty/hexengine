@@ -8,7 +8,7 @@ import {
 } from '@react-three/drei';
 import { WorldConfig, HexTile } from '../../types';
 import HexGrid from './HexGrid';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 interface HexWorldProps {
   config: WorldConfig;
@@ -27,11 +27,25 @@ export default function HexWorld({ config }: HexWorldProps) {
     setTileMap(map);
   }, []);
 
+  // Calculate camera distance limits based on grid size
+  const cameraLimits = useMemo(() => {
+    const baseDistance = 90;
+    const gridFactor = Math.max(1, config.grid.radius / 30); // Scale based on default radius of 30
+    return {
+      minDistance: baseDistance,
+      maxDistance: baseDistance * (gridFactor * 1.5) // Increase max distance more aggressively
+    };
+  }, [config.grid.radius]);
+
   const { camera } = config;
 
   return (
-    <div className="w-full h-full">
-      <Canvas shadows>
+    <div className="absolute inset-0">
+      <Canvas
+        shadows
+        resize={{ scroll: false }}
+        style={{ width: '100%', height: '100%' }}
+      >
         {/* Performance monitoring in development */}
         {process.env.NODE_ENV === 'development' && <Stats />}
 
@@ -48,8 +62,8 @@ export default function HexWorld({ config }: HexWorldProps) {
           enableDamping
           dampingFactor={0.1}
           rotateSpeed={0.5}
-          minDistance={90}
-          maxDistance={130}
+          minDistance={cameraLimits.minDistance}
+          maxDistance={cameraLimits.maxDistance}
           maxPolarAngle={Math.PI / 2.1} // Prevent going below the horizon
           target={[0, 0, 0]} // Center of the grid
         />

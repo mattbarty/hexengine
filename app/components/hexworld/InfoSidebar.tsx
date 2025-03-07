@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TerrainType, WorldConfig, TerrainColors, TerrainThresholds } from '../../types';
+import { WorldConfig } from '../../types';
 
 interface InfoSidebarProps {
   worldConfig: WorldConfig;
@@ -9,10 +9,9 @@ interface InfoSidebarProps {
 
 export default function InfoSidebar({
   worldConfig,
-  onConfigChange,
-  onRefresh
+  onConfigChange
 }: InfoSidebarProps) {
-  // Local state for config values (to avoid too many re-renders)
+  // Local state for config values
   const [localConfig, setLocalConfig] = useState(worldConfig);
 
   // Update local config when worldConfig changes
@@ -20,35 +19,7 @@ export default function InfoSidebar({
     setLocalConfig(worldConfig);
   }, [worldConfig]);
 
-  // Handle slider changes
-  const handleConfigChange = (
-    section: 'grid' | 'camera',
-    key: string,
-    value: number | string
-  ) => {
-    const newConfig = {
-      ...localConfig,
-      [section]: {
-        ...localConfig[section],
-        [key]: typeof value === 'string' ? parseFloat(value) : value
-      }
-    };
-
-    setLocalConfig(newConfig);
-    onConfigChange(newConfig);
-  };
-
-  // Generate a new random seed
-  const handleNewSeed = () => {
-    const newConfig = {
-      ...localConfig,
-      seed: Math.random()
-    };
-    setLocalConfig(newConfig);
-    onConfigChange(newConfig);
-    onRefresh();
-  };
-
+  // Handle grid changes
   const handleGridChange = (key: string, value: number) => {
     onConfigChange({
       ...worldConfig,
@@ -59,35 +30,23 @@ export default function InfoSidebar({
     });
   };
 
-  const handleTerrainBandChange = (key: keyof typeof worldConfig.grid.terrainBands, value: number) => {
-    onConfigChange({
-      ...worldConfig,
-      grid: {
-        ...worldConfig.grid,
-        terrainBands: {
-          ...worldConfig.grid.terrainBands,
-          [key]: value,
-        },
-      },
-    });
-  };
-
-  // If no tile is selected, show the configuration panel
   return (
     <div className="w-80 h-full bg-gray-800/95 backdrop-blur-sm text-white overflow-y-auto shadow-xl">
-      <div className="p-4">
-        <h2 className="text-xl font-bold mb-4">World Settings</h2>
+      <div className="p-6">
+        <h2 className="text-2xl font-bold mb-6 text-blue-400">World Settings</h2>
 
-        <div className="space-y-6">
-          {/* Grid Settings */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Grid Settings</h3>
-
+        <div className="space-y-8">
+          {/* World Scale */}
+          <div className="bg-gray-700/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-blue-300">World Scale</h3>
             <div className="space-y-4">
               <div>
-                <label className="block mb-1">
-                  Grid Radius: {worldConfig.grid.radius}
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Grid Radius
+                  </label>
+                  <span className="text-sm text-blue-300">{worldConfig.grid.radius}</span>
+                </div>
                 <input
                   type="range"
                   min="10"
@@ -96,12 +55,19 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('radius', parseInt(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Small</span>
+                  <span className="text-xs text-gray-400">Large</span>
+                </div>
               </div>
 
               <div>
-                <label className="block mb-1">
-                  Grid Height: {worldConfig.grid.gridHeight}
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Terrain Height
+                  </label>
+                  <span className="text-sm text-blue-300">{worldConfig.grid.gridHeight}</span>
+                </div>
                 <input
                   type="range"
                   min="5"
@@ -111,12 +77,25 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('gridHeight', parseFloat(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Flat</span>
+                  <span className="text-xs text-gray-400">Mountainous</span>
+                </div>
               </div>
+            </div>
+          </div>
 
+          {/* Terrain Features */}
+          <div className="bg-gray-700/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-blue-300">Terrain Features</h3>
+            <div className="space-y-4">
               <div>
-                <label className="block mb-1">
-                  Water Level: {(worldConfig.grid.waterLevel * 100).toFixed(0)}%
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Water Level
+                  </label>
+                  <span className="text-sm text-blue-300">{(worldConfig.grid.waterLevel * 100).toFixed(0)}%</span>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -126,19 +105,25 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('waterLevel', parseFloat(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Arid</span>
+                  <span className="text-xs text-gray-400">Oceanic</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Noise Settings */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Noise Settings</h3>
-
+          {/* Terrain Detail */}
+          <div className="bg-gray-700/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-blue-300">Terrain Detail</h3>
             <div className="space-y-4">
               <div>
-                <label className="block mb-1">
-                  Noise Scale: {worldConfig.grid.noiseScale.toFixed(2)}
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Feature Scale
+                  </label>
+                  <span className="text-sm text-blue-300">{worldConfig.grid.noiseScale.toFixed(2)}</span>
+                </div>
                 <input
                   type="range"
                   min="0.5"
@@ -148,12 +133,19 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('noiseScale', parseFloat(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Small</span>
+                  <span className="text-xs text-gray-400">Large</span>
+                </div>
               </div>
 
               <div>
-                <label className="block mb-1">
-                  Detail: {(worldConfig.grid.noiseDetail * 100).toFixed(0)}%
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Detail Level
+                  </label>
+                  <span className="text-sm text-blue-300">{(worldConfig.grid.noiseDetail * 100).toFixed(0)}%</span>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -163,12 +155,19 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('noiseDetail', parseFloat(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Smooth</span>
+                  <span className="text-xs text-gray-400">Detailed</span>
+                </div>
               </div>
 
               <div>
-                <label className="block mb-1">
-                  Fuzziness: {(worldConfig.grid.noiseFuzziness * 100).toFixed(0)}%
-                </label>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Surface Roughness
+                  </label>
+                  <span className="text-sm text-blue-300">{(worldConfig.grid.noiseFuzziness * 100).toFixed(0)}%</span>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -178,131 +177,12 @@ export default function InfoSidebar({
                   onChange={(e) => handleGridChange('noiseFuzziness', parseFloat(e.target.value))}
                   className="w-full accent-blue-500"
                 />
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-400">Smooth</span>
+                  <span className="text-xs text-gray-400">Rough</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Terrain Bands */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Terrain Bands</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1">
-                  Shore: {(worldConfig.grid.terrainBands.shore * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="0.2"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.shore}
-                  onChange={(e) => handleTerrainBandChange('shore', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">
-                  Beach: {(worldConfig.grid.terrainBands.beach * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="0.3"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.beach}
-                  onChange={(e) => handleTerrainBandChange('beach', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">
-                  Shrub: {(worldConfig.grid.terrainBands.shrub * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.2"
-                  max="0.4"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.shrub}
-                  onChange={(e) => handleTerrainBandChange('shrub', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">
-                  Forest: {(worldConfig.grid.terrainBands.forest * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.3"
-                  max="0.7"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.forest}
-                  onChange={(e) => handleTerrainBandChange('forest', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">
-                  Stone: {(worldConfig.grid.terrainBands.stone * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.6"
-                  max="0.9"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.stone}
-                  onChange={(e) => handleTerrainBandChange('stone', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">
-                  Snow: {(worldConfig.grid.terrainBands.snow * 100).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.8"
-                  max="1"
-                  step="0.01"
-                  value={worldConfig.grid.terrainBands.snow}
-                  onChange={(e) => handleTerrainBandChange('snow', parseFloat(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Stone Distribution */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Stone Distribution</h3>
-            <div className="text-sm opacity-80">
-              <p className="mb-2">Spawn Rates:</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Shore: 5%</li>
-                <li>Beach: 8%</li>
-                <li>Shrub: 12%</li>
-                <li>Forest: 15%</li>
-                <li>Stone: 40%</li>
-                <li>Snow: 20%</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Regenerate Button */}
-          <div>
-            <button
-              onClick={onRefresh}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-              Regenerate World
-            </button>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { HexTile, WorldConfig } from './types';
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
   grid: {
-    radius: 30,
+    radius: 24,
     hexSize: 1,
     gridHeight: 14,
     noiseScale: 1.35,
@@ -100,15 +100,94 @@ export default function Home() {
           config={worldConfig}
         />
 
-        {/* Settings Button - only shown when sidebar is closed */}
-        {!isSidebarOpen && (
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="fixed top-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-          >
-            Open Settings
-          </button>
-        )}
+        {/* Control buttons */}
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          {!isSidebarOpen && (
+            <>
+              <button
+                onClick={() => {
+                  // Generate new terrain bands with randomization
+                  const waterLevel = Math.random() * 0.35 + 0.15;
+                  const shore = Math.random() * 0.05 + 0.08;
+                  const beach = shore + Math.random() * 0.08 + 0.07;
+                  const shrub = beach + Math.random() * 0.08 + 0.07;
+                  const forest = shrub + Math.random() * 0.15 + 0.15;
+                  const stone = forest + Math.random() * 0.15 + 0.15;
+                  const snow = Math.min(stone + Math.random() * 0.1 + 0.05, 0.95);
+
+                  // Generate new terrain detail parameters
+                  const noiseScale = Math.random() * 1.5 + 0.8;
+                  const noiseDetail = Math.random() * 0.5 + 0.2;
+                  const noiseFuzziness = Math.random() * 0.6 + 0.2;
+
+                  setWorldConfig({
+                    ...worldConfig,
+                    seed: Math.random(),
+                    grid: {
+                      ...worldConfig.grid,
+                      waterLevel,
+                      noiseScale,
+                      noiseDetail,
+                      noiseFuzziness,
+                      terrainBands: {
+                        shore,
+                        beach,
+                        shrub,
+                        forest,
+                        stone,
+                        snow
+                      }
+                    }
+                  });
+                  handleRefresh();
+                }}
+                className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Generate New World
+              </button>
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Settings
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Sidebar with transition */}

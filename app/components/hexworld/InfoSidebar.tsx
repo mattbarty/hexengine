@@ -11,6 +11,7 @@ interface InfoSidebarProps {
 export default function InfoSidebar({
   worldConfig,
   onConfigChange,
+  onRefresh,
   onClose
 }: InfoSidebarProps) {
   // Local state for config values
@@ -32,14 +33,74 @@ export default function InfoSidebar({
     });
   };
 
+  // Handle refresh with new seed
+  const handleWorldRefresh = () => {
+    // Generate new terrain bands with randomization
+    const waterLevel = Math.random() * 0.35; // 0.15-0.5 for more variety in water levels
+    const shore = Math.random() * 0.05 + 0.08; // 0.08-0.13
+    const beach = shore + Math.random() * 0.08 + 0.07; // shore + 0.07-0.15
+    const shrub = beach + Math.random() * 0.08 + 0.07; // beach + 0.07-0.15
+    const forest = shrub + Math.random() * 0.15 + 0.15; // shrub + 0.15-0.30
+    const stone = forest + Math.random() * 0.15 + 0.15; // forest + 0.15-0.30
+    const snow = Math.min(stone + Math.random() * 0.1 + 0.05, 0.95); // stone + 0.05-0.15, capped at 0.95
+
+    // Generate new terrain detail parameters
+    const noiseScale = Math.random() * 1.5 + 0.8; // 0.8-2.3 for varied feature sizes
+    const noiseDetail = Math.random() * 0.5 + 0.2; // 0.2-0.7 for varied detail levels
+    const noiseFuzziness = Math.random() * 0.6 + 0.2; // 0.2-0.8 for varied surface roughness
+
+    onConfigChange({
+      ...worldConfig,
+      seed: Math.random(),
+      grid: {
+        ...worldConfig.grid,
+        waterLevel,
+        noiseScale,
+        noiseDetail,
+        noiseFuzziness,
+        terrainBands: {
+          shore,
+          beach,
+          shrub,
+          forest,
+          stone,
+          snow
+        }
+      }
+    });
+    onRefresh();
+  };
+
   return (
     <div className="h-full bg-gray-800/95 backdrop-blur-sm text-white overflow-y-auto shadow-xl">
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-blue-400">World Settings</h2>
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-blue-400 mb-4">World Settings</h2>
+          <button
+            onClick={handleWorldRefresh}
+            className="w-full bg-gray-700/50 text-white px-4 py-2 rounded-lg hover:bg-gray-600/50 transition-colors flex items-center justify-center gap-2"
+            aria-label="Generate new world"
+            title="Generate new world"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Generate New World
+          </button>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+            className="absolute top-4 right-4 p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
             aria-label="Close settings"
           >
             <svg

@@ -6,13 +6,17 @@ interface InfoSidebarProps {
   onConfigChange: (newConfig: WorldConfig) => void;
   onRefresh?: () => void;
   onClose: () => void;
+  isGenerating?: boolean;
+  isRendering?: boolean;
 }
 
 export default function InfoSidebar({
   worldConfig,
   onConfigChange,
   onRefresh,
-  onClose
+  onClose,
+  isGenerating = false,
+  isRendering = false
 }: InfoSidebarProps) {
   // Local state for config values
   const [localConfig, setLocalConfig] = useState(worldConfig);
@@ -80,13 +84,20 @@ export default function InfoSidebar({
           <h2 className="text-2xl font-bold text-blue-400 mb-4">World Settings</h2>
           <button
             onClick={handleWorldRefresh}
-            className="w-full bg-gray-700/50 text-white px-4 py-2 rounded-lg hover:bg-gray-600/50 transition-colors flex items-center justify-center gap-2"
+            disabled={isGenerating || isRendering}
+            className={`
+              w-full bg-gray-700/50 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2
+              ${(isGenerating || isRendering)
+                ? 'opacity-75 cursor-not-allowed'
+                : 'hover:bg-gray-600/50'
+              }
+            `}
             aria-label="Generate new world"
             title="Generate new world"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
+              className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -98,7 +109,7 @@ export default function InfoSidebar({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            Generate New World
+            {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
           </button>
           <button
             onClick={onClose}

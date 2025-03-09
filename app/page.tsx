@@ -285,7 +285,7 @@ export default function Home() {
         className={`
           transition-all duration-300 ease-in-out overflow-hidden
           ${isSidebarOpen
-            ? 'h-[60vh] w-full sm:h-full sm:w-80'
+            ? 'h-[40vh] w-full sm:h-full sm:w-80'
             : 'h-0 w-full sm:w-0'
           }
         `}
@@ -295,6 +295,9 @@ export default function Home() {
             worldConfig={worldConfig}
             onConfigChange={handleConfigChange}
             onClose={() => setIsSidebarOpen(false)}
+            isGenerating={isGenerating}
+            isRendering={isRendering}
+            onRefresh={handleGenerateWorld}
           />
         )}
       </div>

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { WorldConfig } from '../../types';
 
 interface InfoSidebarProps {
@@ -18,14 +17,6 @@ export default function InfoSidebar({
   isGenerating = false,
   isRendering = false
 }: InfoSidebarProps) {
-  // Local state for config values
-  const [localConfig, setLocalConfig] = useState(worldConfig);
-
-  // Update local config when worldConfig changes
-  useEffect(() => {
-    setLocalConfig(worldConfig);
-  }, [worldConfig]);
-
   // Handle grid changes
   const handleGridChange = (key: string, value: number) => {
     onConfigChange({

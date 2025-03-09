@@ -143,7 +143,7 @@ export default function Stone({ tiles, hexSize }: StoneProps) {
     // Update buffers
     stone.instanceMatrix.needsUpdate = true;
     if (stone.instanceColor) stone.instanceColor.needsUpdate = true;
-  }, [tiles, hexSize]);
+  }, [tiles, hexSize, stoneTiles]);
 
   return (
     <instancedMesh

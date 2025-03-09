@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import HexWorld from './components/hexworld/HexWorld';
 import InfoSidebar from './components/hexworld/InfoSidebar';
-import { HexTile, WorldConfig } from './types';
+import { WorldConfig } from './types';
 
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
@@ -46,7 +46,6 @@ const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
 export default function Home() {
   // State to control client-side rendering
   const [isClient, setIsClient] = useState(false);
-  const [selectedTile, setSelectedTile] = useState<HexTile | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
@@ -67,10 +66,6 @@ export default function Home() {
       seed: Math.random()
     }));
   }, []);
-
-  const handleTileSelect = (tile: HexTile | null) => {
-    setSelectedTile(tile);
-  };
 
   const handleConfigChange = useCallback((newConfig: WorldConfig) => {
     setWorldConfig(newConfig);
@@ -120,7 +115,6 @@ export default function Home() {
           }
         }
       });
-      setSelectedTile(null);
     } finally {
       // Clear the timeout and reset generating state
       clearTimeout(timeoutId);

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { InstancedMesh, Object3D, Color, CylinderGeometry, Vector3 } from 'three';
+import { InstancedMesh, Object3D, Color, CylinderGeometry } from 'three';
 import { HexTile, TerrainType } from '../../types';
 import { useEffect } from 'react';
 
@@ -111,7 +111,7 @@ export default function Grass({ tiles, hexSize }: GrassProps) {
     // Update buffers
     grass.instanceMatrix.needsUpdate = true;
     if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
-  }, [tiles, hexSize]);
+  }, [tiles, hexSize, grassTiles]);
 
   return (
     <instancedMesh

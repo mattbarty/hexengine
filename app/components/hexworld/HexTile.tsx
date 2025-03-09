@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { HexTile as HexTileType, TerrainType, TerrainColors } from '../../types';
+import { HexTile as HexTileType } from '../../types';
 import { Mesh, Vector3 } from 'three';
 import { getTerrainColor } from '../../utils/terrainGenerator';
 import { useFrame } from '@react-three/fiber';

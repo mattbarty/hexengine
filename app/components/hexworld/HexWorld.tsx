@@ -6,9 +6,9 @@ import {
   Environment,
   PerspectiveCamera
 } from '@react-three/drei';
-import { WorldConfig, HexTile } from '../../types';
+import { WorldConfig } from '../../types';
 import HexGrid from './HexGrid';
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 interface HexWorldProps {
   config: WorldConfig;
@@ -16,16 +16,8 @@ interface HexWorldProps {
 }
 
 export default function HexWorld({ config, onRenderComplete }: HexWorldProps) {
-  // Map of tile ids to tile data for quick lookup
-  const [tileMap, setTileMap] = useState<Record<string, HexTile>>({});
-
   // Set the tile map after terrain generation
-  const handleGridCreated = useCallback((tiles: HexTile[]) => {
-    const map: Record<string, HexTile> = {};
-    tiles.forEach(tile => {
-      map[tile.id] = tile;
-    });
-    setTileMap(map);
+  const handleGridCreated = useCallback(() => {
     // Call onRenderComplete when the grid is created and rendered
     if (onRenderComplete) {
       onRenderComplete();

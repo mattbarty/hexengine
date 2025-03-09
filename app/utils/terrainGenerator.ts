@@ -1,11 +1,10 @@
-import { createNoise2D, createNoise3D } from 'simplex-noise';
+import { createNoise2D } from 'simplex-noise';
 import {
 	HexCoord,
 	HexTile,
 	TerrainType,
 	HexGridConfig,
 	TerrainColors,
-	TerrainThresholds,
 } from '../types';
 import { getHexId, hexToPixel, getHexesInRadius } from './hexUtils';
 
@@ -13,7 +12,7 @@ import { getHexId, hexToPixel, getHexesInRadius } from './hexUtils';
 function getDomainWarp(
 	x: number,
 	y: number,
-	noise2D: Function,
+	noise2D: (x: number, y: number) => number,
 	scale: number,
 	amplitude: number
 ): [number, number] {
@@ -65,7 +64,6 @@ export function generateTerrain(
 	// Determine the world variety based on seed (with safety checks)
 	const worldVariety = Math.max(0, Math.min(1, (varietyNoise(0, 0) + 1) / 2));
 	const islandFactor = Math.max(0, Math.min(1, worldVariety * 2));
-	const mountainousness = Math.max(0, Math.min(1, 0.5 + varietyNoise(1, 1)));
 
 	// Helper to calculate height for a hex
 	const calculateHeight = (q: number, r: number, s: number): number => {

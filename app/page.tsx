@@ -48,6 +48,8 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [selectedTile, setSelectedTile] = useState<HexTile | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
 
   // Initialize worldConfig with a fixed seed for initial render
   const [worldConfig, setWorldConfig] = useState<WorldConfig>({
@@ -74,6 +76,63 @@ export default function Home() {
     setWorldConfig(newConfig);
   }, []);
 
+  const handleGenerateWorld = useCallback(() => {
+    setIsGenerating(true);
+    setIsRendering(true);
+
+    // Set a timeout to reset the generating state if it takes too long
+    const timeoutId = setTimeout(() => {
+      setIsGenerating(false);
+      setIsRendering(false);
+    }, 6000); // 6 second timeout
+
+    try {
+      // Generate new terrain bands with randomization
+      const waterLevel = Math.random() * 0.35 + 0.15;
+      const shore = Math.random() * 0.05 + 0.08;
+      const beach = shore + Math.random() * 0.08 + 0.07;
+      const shrub = beach + Math.random() * 0.08 + 0.07;
+      const forest = shrub + Math.random() * 0.15 + 0.15;
+      const stone = forest + Math.random() * 0.15 + 0.15;
+      const snow = Math.min(stone + Math.random() * 0.1 + 0.05, 0.95);
+
+      // Generate new terrain detail parameters
+      const noiseScale = Math.random() * 1.5 + 0.8;
+      const noiseDetail = Math.random() * 0.5 + 0.2;
+      const noiseFuzziness = Math.random() * 0.6 + 0.2;
+
+      setWorldConfig({
+        ...worldConfig,
+        seed: Math.random(),
+        grid: {
+          ...worldConfig.grid,
+          waterLevel,
+          noiseScale,
+          noiseDetail,
+          noiseFuzziness,
+          terrainBands: {
+            shore,
+            beach,
+            shrub,
+            forest,
+            stone,
+            snow
+          }
+        }
+      });
+      setSelectedTile(null);
+    } finally {
+      // Clear the timeout and reset generating state
+      clearTimeout(timeoutId);
+      setIsGenerating(false);
+      // Note: We don't reset isRendering here as the 3D world is still rendering
+    }
+  }, [worldConfig]);
+
+  const handleRenderComplete = useCallback(() => {
+    setIsRendering(false);
+  }, []);
+
   // Only render the full UI on the client side
   if (!isClient) {
     return <div className="flex h-screen w-full bg-gray-900">
@@ -94,6 +153,7 @@ export default function Home() {
         `}>
           <HexWorld
             config={worldConfig}
+            onRenderComplete={handleRenderComplete}
           />
 
           {/* Control buttons - desktop only */}
@@ -101,47 +161,19 @@ export default function Home() {
             {!isSidebarOpen && (
               <>
                 <button
-                  onClick={() => {
-                    // Generate new terrain bands with randomization
-                    const waterLevel = Math.random() * 0.35 + 0.15;
-                    const shore = Math.random() * 0.05 + 0.08;
-                    const beach = shore + Math.random() * 0.08 + 0.07;
-                    const shrub = beach + Math.random() * 0.08 + 0.07;
-                    const forest = shrub + Math.random() * 0.15 + 0.15;
-                    const stone = forest + Math.random() * 0.15 + 0.15;
-                    const snow = Math.min(stone + Math.random() * 0.1 + 0.05, 0.95);
-
-                    // Generate new terrain detail parameters
-                    const noiseScale = Math.random() * 1.5 + 0.8;
-                    const noiseDetail = Math.random() * 0.5 + 0.2;
-                    const noiseFuzziness = Math.random() * 0.6 + 0.2;
-
-                    setWorldConfig({
-                      ...worldConfig,
-                      seed: Math.random(),
-                      grid: {
-                        ...worldConfig.grid,
-                        waterLevel,
-                        noiseScale,
-                        noiseDetail,
-                        noiseFuzziness,
-                        terrainBands: {
-                          shore,
-                          beach,
-                          shrub,
-                          forest,
-                          stone,
-                          snow
-                        }
-                      }
-                    });
-                    setSelectedTile(null);
-                  }}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  onClick={handleGenerateWorld}
+                  disabled={isGenerating || isRendering}
+                  className={`
+                    bg-gray-800 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2
+                    ${(isGenerating || isRendering)
+                      ? 'opacity-75 cursor-not-allowed'
+                      : 'hover:bg-gray-700'
+                    }
+                  `}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
+                    className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -153,7 +185,7 @@ export default function Home() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  Generate New World
+                  {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
                 </button>
                 <button
                   onClick={() => setIsSidebarOpen(true)}
@@ -191,47 +223,19 @@ export default function Home() {
           {!isSidebarOpen && (
             <>
               <button
-                onClick={() => {
-                  // Generate new terrain bands with randomization
-                  const waterLevel = Math.random() * 0.35 + 0.15;
-                  const shore = Math.random() * 0.05 + 0.08;
-                  const beach = shore + Math.random() * 0.08 + 0.07;
-                  const shrub = beach + Math.random() * 0.08 + 0.07;
-                  const forest = shrub + Math.random() * 0.15 + 0.15;
-                  const stone = forest + Math.random() * 0.15 + 0.15;
-                  const snow = Math.min(stone + Math.random() * 0.1 + 0.05, 0.95);
-
-                  // Generate new terrain detail parameters
-                  const noiseScale = Math.random() * 1.5 + 0.8;
-                  const noiseDetail = Math.random() * 0.5 + 0.2;
-                  const noiseFuzziness = Math.random() * 0.6 + 0.2;
-
-                  setWorldConfig({
-                    ...worldConfig,
-                    seed: Math.random(),
-                    grid: {
-                      ...worldConfig.grid,
-                      waterLevel,
-                      noiseScale,
-                      noiseDetail,
-                      noiseFuzziness,
-                      terrainBands: {
-                        shore,
-                        beach,
-                        shrub,
-                        forest,
-                        stone,
-                        snow
-                      }
-                    }
-                  });
-                  setSelectedTile(null);
-                }}
-                className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+                onClick={handleGenerateWorld}
+                disabled={isGenerating || isRendering}
+                className={`
+                  bg-gray-800 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2
+                  ${(isGenerating || isRendering)
+                    ? 'opacity-75 cursor-not-allowed'
+                    : 'hover:bg-gray-700'
+                  }
+                `}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
+                  className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -243,7 +247,7 @@ export default function Home() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Generate New World
+                {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
               </button>
               <button
                 onClick={() => setIsSidebarOpen(true)}

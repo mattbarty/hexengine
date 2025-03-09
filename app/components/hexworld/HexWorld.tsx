@@ -12,9 +12,10 @@ import { useState, useCallback, useMemo } from 'react';
 
 interface HexWorldProps {
   config: WorldConfig;
+  onRenderComplete?: () => void;
 }
 
-export default function HexWorld({ config }: HexWorldProps) {
+export default function HexWorld({ config, onRenderComplete }: HexWorldProps) {
   // Map of tile ids to tile data for quick lookup
   const [tileMap, setTileMap] = useState<Record<string, HexTile>>({});
 
@@ -25,7 +26,11 @@ export default function HexWorld({ config }: HexWorldProps) {
       map[tile.id] = tile;
     });
     setTileMap(map);
-  }, []);
+    // Call onRenderComplete when the grid is created and rendered
+    if (onRenderComplete) {
+      onRenderComplete();
+    }
+  }, [onRenderComplete]);
 
   // Calculate camera distance limits based on grid size
   const cameraLimits = useMemo(() => {

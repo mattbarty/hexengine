@@ -55,9 +55,6 @@ export default function Home() {
     seed: 12345 // Fixed initial seed
   });
 
-  // Use a key to force re-render of the HexWorld component when needed
-  const [worldKey, setWorldKey] = useState<number>(0);
-
   // Set isClient to true after component mounts
   useEffect(() => {
     setIsClient(true);
@@ -77,13 +74,6 @@ export default function Home() {
     setWorldConfig(newConfig);
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    // Increment the key to force a complete re-render of the HexWorld
-    setWorldKey(prev => prev + 1);
-    // Clear selected tile when regenerating
-    setSelectedTile(null);
-  }, []);
-
   // Only render the full UI on the client side
   if (!isClient) {
     return <div className="flex h-screen w-full bg-gray-900">
@@ -96,7 +86,6 @@ export default function Home() {
       {/* Main content area */}
       <div className="flex-1 relative min-w-0">
         <HexWorld
-          key={worldKey}
           config={worldConfig}
         />
 
@@ -139,7 +128,7 @@ export default function Home() {
                       }
                     }
                   });
-                  handleRefresh();
+                  setSelectedTile(null);
                 }}
                 className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
@@ -195,12 +184,13 @@ export default function Home() {
         className={`flex-shrink-0 transition-[width] duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-80' : 'w-0'
           }`}
       >
-        {isSidebarOpen && <InfoSidebar
-          worldConfig={worldConfig}
-          onConfigChange={handleConfigChange}
-          onRefresh={handleRefresh}
-          onClose={() => setIsSidebarOpen(false)}
-        />}
+        {isSidebarOpen && (
+          <InfoSidebar
+            worldConfig={worldConfig}
+            onConfigChange={handleConfigChange}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

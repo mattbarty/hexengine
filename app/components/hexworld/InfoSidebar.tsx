@@ -4,7 +4,7 @@ import { WorldConfig } from '../../types';
 interface InfoSidebarProps {
   worldConfig: WorldConfig;
   onConfigChange: (newConfig: WorldConfig) => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
   onClose: () => void;
 }
 
@@ -68,7 +68,9 @@ export default function InfoSidebar({
         }
       }
     });
-    onRefresh();
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   return (

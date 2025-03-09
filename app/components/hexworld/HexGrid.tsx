@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { HexGridConfig, HexTile as HexTileType } from '../../types';
 import { getHexesInRadius } from '../../utils/hexUtils';
 import { generateTerrain } from '../../utils/terrainGenerator';
@@ -14,31 +14,35 @@ interface HexGridProps {
 }
 
 export default function HexGrid({ config, seed, onGridCreated }: HexGridProps) {
+  // Keep track of current tiles for animation
+  const [currentTiles, setCurrentTiles] = useState<HexTileType[]>([]);
+
   // Generate hex grid and terrain
-  const tiles = useMemo(() => {
+  const newTiles = useMemo(() => {
     const hexes = getHexesInRadius(config.radius);
     return generateTerrain(hexes, config, seed);
   }, [config, seed]);
 
-  // Notify parent when tiles are generated
+  // Update current tiles and notify parent when new tiles are generated
   useEffect(() => {
+    setCurrentTiles(newTiles);
     if (onGridCreated) {
-      onGridCreated(tiles);
+      onGridCreated(newTiles);
     }
-  }, [tiles, onGridCreated]);
+  }, [newTiles, onGridCreated]);
 
   return (
     <group>
-      {tiles.map((tile) => (
+      {currentTiles.map((tile) => (
         <HexTile
           key={tile.id}
           tile={tile}
           hexSize={config.hexSize}
         />
       ))}
-      <Tree tiles={tiles} hexSize={config.hexSize} />
-      <Grass tiles={tiles} hexSize={config.hexSize} />
-      <Stone tiles={tiles} hexSize={config.hexSize} />
+      <Tree tiles={currentTiles} hexSize={config.hexSize} />
+      <Grass tiles={currentTiles} hexSize={config.hexSize} />
+      <Stone tiles={currentTiles} hexSize={config.hexSize} />
     </group>
   );
 } 

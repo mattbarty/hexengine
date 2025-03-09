@@ -40,7 +40,7 @@ export default function HexWorld({ config }: HexWorldProps) {
   const { camera } = config;
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 aspect-square sm:aspect-auto">
       <Canvas
         shadows
         resize={{ scroll: false }}

@@ -21,14 +21,15 @@ function Controls({ isOrbiting, cameraLimits, camera }: {
   cameraLimits: { minDistance: number; maxDistance: number; };
   camera: WorldConfig['camera'];
 }) {
-  const orbitControlsRef = useRef<any>(null);
+  const orbitControlsRef = useRef(null);
 
   useFrame(() => {
-    if (orbitControlsRef.current && isOrbiting) {
-      orbitControlsRef.current.autoRotate = true;
-      orbitControlsRef.current.autoRotateSpeed = 1.0;
-    } else if (orbitControlsRef.current) {
-      orbitControlsRef.current.autoRotate = false;
+    const controls = orbitControlsRef.current as { autoRotate: boolean; autoRotateSpeed: number; } | null;
+    if (controls && isOrbiting) {
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 1.0;
+    } else if (controls) {
+      controls.autoRotate = false;
     }
   });
 

@@ -150,6 +150,11 @@ export default function Home() {
             onRenderComplete={handleRenderComplete}
           />
 
+          {/* Credit footer */}
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs sm:text-sm opacity-70 hover:opacity-100 transition-opacity text-gray-800 font-semibold">
+            Cobbled together by <a href="https://www.mattbarty.com" target="_blank" rel="noopener noreferrer" className="hover:underline text-teal-600 font-bold">Matt Barty</a>
+          </div>
+
           {/* Control buttons - desktop only */}
           <div className="hidden sm:flex fixed top-4 right-4 z-50 gap-2">
             {!isSidebarOpen && (
@@ -279,7 +284,7 @@ export default function Home() {
         className={`
           transition-all duration-300 ease-in-out overflow-hidden
           ${isSidebarOpen
-            ? 'h-[40vh] w-full sm:h-full sm:w-80'
+            ? 'h-[60vh] w-full sm:h-full sm:w-80'
             : 'h-0 w-full sm:w-0'
           }
         `}

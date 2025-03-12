@@ -1,6 +1,8 @@
 # HexEngine
 
-A procedurally generated hexagonal world engine built with Next.js and Three.js, inspired by u/ppictures [post on reddit](https://www.reddit.com/r/threejs/comments/s1jq4q/procedural_hexagon_terrain_threejs_react/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). This project creates beautiful 3D hexagonal landscapes with realistic terrain generation, featuring varied biomes and smooth transitions between different terrain types.
+A procedurally generated hexagonal world engine built with Next.js, Three.js, and Cursor (sonnet-3.5) - Project inspired by u/ppictures [post on reddit](https://www.reddit.com/r/threejs/comments/s1jq4q/procedural_hexagon_terrain_threejs_react/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button).
+
+This project creates beautiful 3D hexagonal landscapes with realistic terrain generation, featuring varied biomes and smooth transitions between different terrain types.
 
 Check out the [hosted demo](https://hexengine.vercel.app/)! (https://hexengine.vercel.app/)
 
@@ -44,7 +46,7 @@ https://github.com/user-attachments/assets/f99bd158-142d-4c1d-88a6-b611fb4f3393
 1. Clone the repository
 
    ```
-   git clone https://github.com/yourusername/hexengine.git
+   git clone https://github.com/mattbarty/hexengine.git
    cd hexengine
    ```
 
@@ -116,7 +118,7 @@ const defaultWorldConfigBase = {
 
 ## License
 
-I don't really know what this mean - Check out my code, take what you want.
+I don't really know what this means - Check out my code, take what you want.
 
 ## Acknowledgments
 - [u/ppictures post on Reddit](https://www.reddit.com/r/threejs/comments/s1jq4q/procedural_hexagon_terrain_threejs_react/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)

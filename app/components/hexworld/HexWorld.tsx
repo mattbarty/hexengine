@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import {
   OrbitControls,
   Sky,
@@ -8,14 +8,53 @@ import {
 } from '@react-three/drei';
 import { WorldConfig } from '../../types';
 import HexGrid from './HexGrid';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 interface HexWorldProps {
   config: WorldConfig;
   onRenderComplete?: () => void;
+  isOrbiting?: boolean;
 }
 
-export default function HexWorld({ config, onRenderComplete }: HexWorldProps) {
+function Controls({ isOrbiting, cameraLimits, camera }: {
+  isOrbiting: boolean;
+  cameraLimits: { minDistance: number; maxDistance: number; };
+  camera: WorldConfig['camera'];
+}) {
+  const orbitControlsRef = useRef<any>(null);
+
+  useFrame(() => {
+    if (orbitControlsRef.current && isOrbiting) {
+      orbitControlsRef.current.autoRotate = true;
+      orbitControlsRef.current.autoRotateSpeed = 1.0;
+    } else if (orbitControlsRef.current) {
+      orbitControlsRef.current.autoRotate = false;
+    }
+  });
+
+  return (
+    <>
+      <PerspectiveCamera
+        makeDefault
+        position={camera.position}
+        rotation={camera.rotation}
+        fov={camera.fov}
+      />
+      <OrbitControls
+        ref={orbitControlsRef}
+        enableDamping
+        dampingFactor={0.1}
+        rotateSpeed={0.5}
+        minDistance={cameraLimits.minDistance}
+        maxDistance={cameraLimits.maxDistance}
+        maxPolarAngle={Math.PI / 2.1} // Prevent going below the horizon
+        target={[0, 0, 0]} // Center of the grid
+      />
+    </>
+  );
+}
+
+export default function HexWorld({ config, onRenderComplete, isOrbiting = false }: HexWorldProps) {
   // Set the tile map after terrain generation
   const handleGridCreated = useCallback(() => {
     // Call onRenderComplete when the grid is created and rendered
@@ -34,8 +73,6 @@ export default function HexWorld({ config, onRenderComplete }: HexWorldProps) {
     };
   }, [config.grid.radius]);
 
-  const { camera } = config;
-
   return (
     <div className="absolute inset-0 aspect-square sm:aspect-auto">
       <Canvas
@@ -46,23 +83,11 @@ export default function HexWorld({ config, onRenderComplete }: HexWorldProps) {
         {/* Performance monitoring in development */}
         {process.env.NODE_ENV === 'development' && <Stats />}
 
-        {/* Camera */}
-        <PerspectiveCamera
-          makeDefault
-          position={camera.position}
-          rotation={camera.rotation}
-          fov={camera.fov}
-        />
-
-        {/* Controls */}
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.1}
-          rotateSpeed={0.5}
-          minDistance={cameraLimits.minDistance}
-          maxDistance={cameraLimits.maxDistance}
-          maxPolarAngle={Math.PI / 2.1} // Prevent going below the horizon
-          target={[0, 0, 0]} // Center of the grid
+        {/* Camera and Controls */}
+        <Controls
+          isOrbiting={isOrbiting}
+          cameraLimits={cameraLimits}
+          camera={config.camera}
         />
 
         {/* Lighting */}

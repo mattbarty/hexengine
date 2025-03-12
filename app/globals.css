@@ -5,6 +5,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 8s linear infinite;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

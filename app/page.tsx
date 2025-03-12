@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import HexWorld from './components/hexworld/HexWorld';
 import InfoSidebar from './components/hexworld/InfoSidebar';
 import { WorldConfig } from './types';
+import { Orbit, RefreshCw, Settings } from 'lucide-react';
 
 // Default world configuration without the random seed
 const defaultWorldConfigBase: Omit<WorldConfig, 'seed'> = {
@@ -49,6 +50,7 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
+  const [isOrbiting, setIsOrbiting] = useState(false);
 
   // Initialize worldConfig with a fixed seed for initial render
   const [worldConfig, setWorldConfig] = useState<WorldConfig>({
@@ -148,6 +150,7 @@ export default function Home() {
           <HexWorld
             config={worldConfig}
             onRenderComplete={handleRenderComplete}
+            isOrbiting={isOrbiting}
           />
 
           {/* Credit footer */}
@@ -160,6 +163,18 @@ export default function Home() {
             {!isSidebarOpen && (
               <>
                 <button
+                  onClick={() => setIsOrbiting(!isOrbiting)}
+                  className={`
+                    bg-gray-800 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2
+                    ${isOrbiting ? 'bg-teal-700 hover:bg-teal-600' : 'hover:bg-gray-700'}
+                  `}
+                >
+                  <Orbit
+                    className={`h-5 w-5 ${isOrbiting ? 'animate-spin-reverse' : ''}`}
+                  />
+                  {isOrbiting ? 'Stop Orbit' : 'Orbit View'}
+                </button>
+                <button
                   onClick={handleGenerateWorld}
                   disabled={isGenerating || isRendering}
                   className={`
@@ -170,46 +185,16 @@ export default function Home() {
                     }
                   `}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                  <RefreshCw
                     className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
+                  />
                   {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
                 </button>
                 <button
                   onClick={() => setIsSidebarOpen(true)}
                   className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
+                  <Settings className="h-5 w-5" />
                   <span className="hidden sm:block">Settings</span>
                 </button>
               </>
@@ -222,6 +207,18 @@ export default function Home() {
           {!isSidebarOpen && (
             <>
               <button
+                onClick={() => setIsOrbiting(!isOrbiting)}
+                className={`
+                  bg-gray-800 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2
+                  ${isOrbiting ? 'bg-teal-700 hover:bg-teal-600' : 'hover:bg-gray-700'}
+                `}
+              >
+                <Orbit
+                  className={`h-5 w-5 ${isOrbiting ? 'animate-spin-reverse' : ''}`}
+                />
+                {isOrbiting ? 'Stop' : 'Orbit'}
+              </button>
+              <button
                 onClick={handleGenerateWorld}
                 disabled={isGenerating || isRendering}
                 className={`
@@ -232,47 +229,19 @@ export default function Home() {
                   }
                 `}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                <RefreshCw
                   className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                />
                 {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
               </button>
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Settings
+                <Settings className="h-5 w-5" />
+                <p className='hidden sm:block'>
+                  Settings
+                </p>
               </button>
             </>
           )}
@@ -297,6 +266,8 @@ export default function Home() {
             isGenerating={isGenerating}
             isRendering={isRendering}
             onRefresh={handleGenerateWorld}
+            isOrbiting={isOrbiting}
+            onOrbitToggle={() => setIsOrbiting(!isOrbiting)}
           />
         )}
       </div>

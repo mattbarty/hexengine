@@ -1,4 +1,5 @@
 import { WorldConfig } from '../../types';
+import { RefreshCw, Orbit, X } from 'lucide-react';
 
 interface InfoSidebarProps {
   worldConfig: WorldConfig;
@@ -7,6 +8,8 @@ interface InfoSidebarProps {
   onClose: () => void;
   isGenerating?: boolean;
   isRendering?: boolean;
+  isOrbiting?: boolean;
+  onOrbitToggle?: () => void;
 }
 
 export default function InfoSidebar({
@@ -15,7 +18,9 @@ export default function InfoSidebar({
   onRefresh,
   onClose,
   isGenerating = false,
-  isRendering = false
+  isRendering = false,
+  isOrbiting = false,
+  onOrbitToggle
 }: InfoSidebarProps) {
   // Handle grid changes
   const handleGridChange = (key: string, value: number) => {
@@ -73,54 +78,46 @@ export default function InfoSidebar({
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-blue-400 mb-4">World Settings</h2>
-          <button
-            onClick={handleWorldRefresh}
-            disabled={isGenerating || isRendering}
-            className={`
-              w-full bg-gray-700/50 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2
-              ${(isGenerating || isRendering)
-                ? 'opacity-75 cursor-not-allowed'
-                : 'hover:bg-gray-600/50'
-              }
-            `}
-            aria-label="Generate new world"
-            title="Generate new world"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div className="flex gap-2">
+            <button
+              onClick={handleWorldRefresh}
+              disabled={isGenerating || isRendering}
+              className={`
+                flex-1 bg-gray-700/50 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2
+                ${(isGenerating || isRendering)
+                  ? 'opacity-75 cursor-not-allowed'
+                  : 'hover:bg-gray-600/50'
+                }
+              `}
+              aria-label="Generate new world"
+              title="Generate new world"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              <RefreshCw
+                className={`h-5 w-5 ${(isGenerating || isRendering) ? 'animate-spin' : ''}`}
               />
-            </svg>
-            {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate New World'}
-          </button>
+              {isRendering ? 'Rendering...' : isGenerating ? 'Generating...' : 'Generate'}
+            </button>
+            <button
+              onClick={onOrbitToggle}
+              className={`
+                bg-gray-700/50 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2
+                ${isOrbiting ? 'bg-teal-700/50 hover:bg-teal-600/50' : 'hover:bg-gray-600/50'}
+              `}
+              aria-label="Toggle orbit view"
+              title="Toggle orbit view"
+            >
+              <Orbit
+                className={`h-5 w-5 ${isOrbiting ? 'animate-spin-reverse' : ''}`}
+              />
+              {isOrbiting ? 'Stop' : 'Orbit'}
+            </button>
+          </div>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
             aria-label="Close settings"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-400 hover:text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="h-6 w-6 text-gray-400 hover:text-white" />
           </button>
         </div>
 

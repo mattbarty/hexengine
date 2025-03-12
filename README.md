@@ -1,8 +1,10 @@
 # HexEngine
 
-A procedurally generated hexagonal world engine built with Next.js and Three.js. This project creates beautiful 3D hexagonal landscapes with realistic terrain generation, featuring varied biomes and smooth transitions between different terrain types.
+A procedurally generated hexagonal world engine built with Next.js and Three.js, inspired by u/ppictures [post on reddit](https://www.reddit.com/r/threejs/comments/s1jq4q/procedural_hexagon_terrain_threejs_react/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). This project creates beautiful 3D hexagonal landscapes with realistic terrain generation, featuring varied biomes and smooth transitions between different terrain types.
 
-![HexEngine Preview](./public/hexengine-preview.png)
+Check out the [hosted demo](https://hexengine.vercel.app/)! (https://hexengine.vercel.app/)
+
+https://github.com/user-attachments/assets/f99bd158-142d-4c1d-88a6-b611fb4f3393
 
 ## Features
 
@@ -58,7 +60,7 @@ A procedurally generated hexagonal world engine built with Next.js and Three.js.
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser (or just check out the hosted demo [here](https://hexengine.vercel.app/))
 
 ## World Generation
 
@@ -114,10 +116,11 @@ const defaultWorldConfigBase = {
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+I don't really know what this mean - Check out my code, take what you want.
 
 ## Acknowledgments
-
+- [u/ppictures post on Reddit](https://www.reddit.com/r/threejs/comments/s1jq4q/procedural_hexagon_terrain_threejs_react/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+- [hexagona](https://stavridisc.gumroad.com/l/hexagona)
 - [Red Blob Games](https://www.redblobgames.com/grids/hexagons/) for hexagonal grid algorithms
 - [three.js](https://threejs.org/) for 3D rendering
 - [simplex-noise](https://www.npmjs.com/package/simplex-noise) for noise generation
